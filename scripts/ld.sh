@@ -9,7 +9,7 @@ cd ~/urchin_af/analysis/
 # input.sam - Sorted, duplicates removed .sam file of a single chromosome
 # snplist.vcf - VCF file of probable SNP locations. snplist.vcf MUST be sorted.
 
-rep=D7_8
+for rep in D1 D7_7 D7_8; do
 
 echo $rep
 
@@ -69,3 +69,5 @@ done<~/urchin_af/variants/scaffolds.txt
 rm ld.${rep}.tmp
 rm tmp.${rep}.vcf
 rm tmp.${rep}.scaf.sam
+
+done
