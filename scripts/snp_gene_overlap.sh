@@ -2,16 +2,16 @@ sort -k1,1 -k2,2n ~/urchin_af/analysis/cmh.selected.bed > ~/urchin_af/analysis/c
 sort -k1,1 -k2,2n ~/urchin_af/analysis/cmh.neutral.bed > ~/urchin_af/analysis/cmh.neutral.sorted.bed
 sort -k1,1 -k2,2n ~/urchin_af/analysis/cmh.all.bed > ~/urchin_af/analysis/cmh.all.sorted.bed
 
-bedtools closest -a ~/urchin_af/analysis/cmh.selected.sorted.bed \
+~/bin/bedtools2/bin/bedtools closest -a ~/urchin_af/analysis/cmh.selected.sorted.bed \
 -b ~/reference/urchin_probes.sorted.bed \
 -d -t first  > ~/urchin_af/analysis/cmh.selected.genes.txt
 
-bedtools closest -a ~/urchin_af/analysis/cmh.neutral.sorted.bed \
+~/bin/bedtools2/bin/bedtools closest -a ~/urchin_af/analysis/cmh.neutral.sorted.bed \
 -b ~/reference/urchin_probes.sorted.bed \
 -d -t first  > ~/urchin_af/analysis/cmh.neutral.genes.txt
 
 # all cmh
-bedtools closest -a ~/urchin_af/analysis/cmh.all.sorted.bed \
+~/bin/bedtools2/bin/bedtools closest -a ~/urchin_af/analysis/cmh.all.sorted.bed \
 -b ~/reference/urchin_probes.sorted.bed \
 -d -t first  > ~/urchin_af/analysis/cmh.all.genes.txt
 
