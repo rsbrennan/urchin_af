@@ -11,37 +11,37 @@ cd ~/urchin_af/variants/
 $samtools view -H /data/OASV2/merged.fixmate.sorted.bam > ~/urchin_af/variants/sam.header
 
 #check for presence of D1 bam
-if [ -s ~/urchin_af/variants/D1.bam ]
+if [[ -s ~/urchin_af/variants/D1.bam ]];
 then
+    echo "D1.bam exists and is not empty. do nothing"
+else
     echo "D1.bam doesn't exist; creating now"
     $samtools view /data/OASV2/merged.fixmate.sorted.bam   | grep 'OASV2_DNA_D1_8_0.*' | cat ~/urchin_af/variants/sam.header - | $samtools view -Sb > ~/urchin_af/variants/D1.bam
     $samtools index ~/urchin_af/variants/D1.bam
     echo "D1 bam created"
-else
-    echo "D1.bam exists and is not empty. do nothing"
 fi
 
 #check for presence of D7_8 bam
-if [ -s ~/urchin_af/variants/D1.bam ]
+if [ -s ~/urchin_af/variants/D7_8.bam ]
 then
+     echo "D7_8.bam exists and is not empty. do nothing"
+else
     echo "D7_8.bam doesn't exist; creating now"
     $samtools view /data/OASV2/merged.fixmate.sorted.bam   | grep 'OASV2_DNA_D7_8_0.*' | cat ~/urchin_af/variants/sam.header - | $samtools view -Sb > ~/urchin_af/variants/D7_8.bam
     $samtools index ~/urchin_af/variants/D7_8.bam
     echo "D7_8 bam created"
-else
-    echo "D8_8.bam exists and is not empty. do nothing"
 fi
 
 
 #check for presence of D8_7 bam
-if [ -s ~/urchin_af/variants/D1.bam ]
+if [ -s ~/urchin_af/variants/D7_7.bam ]
 then
+    echo "D7_7.bam exists and is not empty. do nothing"
+else
     echo "D7_7.bam doesn't exist; creating now"
     $samtools view /data/OASV2/merged.fixmate.sorted.bam   | grep 'OASV2_DNA_D7_7_5.*' | cat ~/urchin_af/variants/sam.header - | $samtools view -Sb > ~/urchin_af/variants/D7_7.bam
     $samtools index ~/urchin_af/variants/D7_7.bam
     echo "D7_7 bam created"
-else
-    echo "D7_7.bam exists and is not empty. do nothing"
 fi
 
 

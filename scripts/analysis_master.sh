@@ -22,15 +22,8 @@ cat ~/urchin_af/analysis/cmh.out.txt | sort -k1,1 -k2,2n > ~/urchin_af/analysis/
 
 # prep files for ldx
 # isolate each group for comparisons. get bam out. these should be around 15g total.
-~/bin/samtools-1.6/samtools view -H /data/OASV2/merged.fixmate.sorted.bam > ~/urchin_af/variants/sam.header
 
-~/bin/samtools-1.6/samtools view /data/OASV2/merged.fixmate.sorted.bam   | grep 'OASV2_DNA_D1.*' | cat ~/urchin_af/variants/sam.header - | samtools view -Sb > ~/urchin_af/variants/D1.bam
-
-~/bin/samtools-1.6/samtools view /data/OASV2/merged.fixmate.sorted.bam   | grep 'OASV2_DNA_D7_8_0.*' | cat ~/urchin_af/variants/sam.header - | samtools view -Sb > ~/urchin_af/variants/D7_8.bam
-
-~/bin/samtools-1.6/samtools view /data/OASV2/merged.fixmate.sorted.bam   | grep 'OASV2_DNA_D7_7_5.*' | cat ~/urchin_af/variants/sam.header - | samtools view -Sb > ~/urchin_af/variants/D7_7.bam
-
-bash ld.sh 2> ~/urchin_af/log_out/ld_stderr_$(date +"%F_%R").txt 1> ~/urchin_af/log_out/ld_stdout_$(date +"%F_%R").txt
+bash ~/urchin_af/scripts/ld.sh 2> ~/urchin_af/log_out/ld_stderr_$(date +"%F_%R").txt 1> ~/urchin_af/log_out/ld_stdout_$(date +"%F_%R").txt
 
 wait $!
 

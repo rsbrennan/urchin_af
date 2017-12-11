@@ -41,8 +41,10 @@ for(i in 1:nrow(dat)){
 	} else{
 		af.dir$d1_response[i] <- FALSE
 	} 
-   if (i%%5000 == 0){print(i)} # printing progress
+   #if (i%%5000 == 0){print(i)} # printing progress
 }
+
+print("adding responses done")
 
 for(i in 1:nrow(dat)){
 	sub_7.trt <- dat[i,grep("D1_7_", colnames(dat))]
@@ -54,7 +56,7 @@ for(i in 1:nrow(dat)){
 	} else{
 		af.dir$d1_response[i] <- FALSE
 	} 
-   if (i%%5000 == 0){print(i)}
+   #if (i%%5000 == 0){print(i)}
 }
 
 # determine if shifts are in same direction or not
@@ -102,9 +104,11 @@ for(i in 1:nrow(mydata)){
 	test <- mantelhaen.test(Data.xtabs)
 	pH_selection_pval[i] <- test$p.value
 
-	if (i%%5000 == 0){print(i)}
+	#if (i%%5000 == 0){print(i)}
 	#ftable(Data.xtabs)
 }
+
+print("D1-D7 low pH cmh done")
 
 #############
 # cmh for pH selection after 1 day1,  include d1 8 ph as control
@@ -141,8 +145,10 @@ for(i in 1:nrow(mydata)){
 	test <- mantelhaen.test(Data.xtabs)
 	d1_selection_pval[i] <- test$p.value
 
-	if (i%%5000 == 0){print(i)}
+	#if (i%%5000 == 0){print(i)}
 }
+
+print("D1-D1  cmh done")
 
 #############
 # cmh for pH selection after 7 days, comparing d7 low and control ph
@@ -176,9 +182,11 @@ for(i in 1:nrow(mydata)){
 	test <- mantelhaen.test(Data.xtabs)
 	d7_selection_pval[i] <- test$p.value
 
-	if (i%%5000 == 0){print(i)}
+	#if (i%%5000 == 0){print(i)}
 	#ftable(Data.xtabs)
 }
+
+print("D7-D7 cmh done")
 
 ########
 # cmh for control selection, only include control ph indivs
@@ -211,9 +219,11 @@ for(i in 1:nrow(mydata)){
 	test <- mantelhaen.test(Data.xtabs)
 	control_selection_pval[i] <- test$p.value
 
-	if (i%%5000 == 0){print(i)}
+	#if (i%%5000 == 0){print(i)}
 	#ftable(Data.xtabs)
 }
+
+print("control cmh done")
 
 ######## append p values these to mydata ############
 
