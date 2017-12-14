@@ -44,8 +44,8 @@ np.savetxt('/users/r/b/rbrennan/urchin_af/analysis/cmh.all.GO', go_out,fmt='%5s'
 out_1 = np.column_stack((go_out, sig_col))
 
 # pull out snp ID
-
-snp_out = np.empty(shape=(0,4))
+i=0
+snp_out = np.empty(shape=(0,5))
 with open('/users/r/b/rbrennan/urchin_af/analysis/cmh.out.sorted.txt') as master_file:
     next(master_file)
     for line in master_file:
@@ -54,14 +54,20 @@ with open('/users/r/b/rbrennan/urchin_af/analysis/cmh.out.sorted.txt') as master
         # chr and pos
         chr_out = line.split("\t")[0]
         pos_out = line.split("\t")[1]
-        # p value
-        p_val = line.split("\t")[75]
+        # p value: corresponds to col pH_selection_pval
+        p_val = line.split("\t")[79]
+        #test statistic corresponds to col pH_selection_stat
+        test_stat = line.split("\t")[83]
         # combine snp and pval
-        out_2 = np.column_stack((snp_nm, chr_out,pos_out, p_val))
+        out_2 = np.column_stack((snp_nm, chr_out,pos_out, p_val,test_stat ))
         snp_out = np.vstack((snp_out, out_2))
+        i=i+1
+        if i % 10000 == 0: print(i)
 
 out_3 = np.column_stack((snp_out, out_1))
-head = "SNP" + "\t" + "CHR" + "\t" + "POS" + "\t" + "PVAL" + "\t" "WHL" + "\t" + "GO" + "\t" + "sig"
+head = "SNP" + "\t" + "CHR" + "\t" + "POS" + "\t" + "PVAL" + "\t" "WHL" + "\t" + "GO" + "\t" + "sig" + "\t" + "test_stat"
 head = head.split("\t")
 out_final = np.vstack((head, out_3))
 np.savetxt('/users/r/b/rbrennan/urchin_af/analysis/cmh.master.out', out_final,fmt='%5s', delimiter='\t')
+
+
