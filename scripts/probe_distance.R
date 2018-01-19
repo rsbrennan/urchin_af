@@ -33,7 +33,7 @@ low.keep <- which(dat.new$V14 <= 2000)
 
 out <- af.dat.new[low.keep,]
 
-write.table("~/urchin_af/data/allele.freq.txt",row.names=FALSE, col.names=TRUE, quote=FALSE, sep="\t")
+write.table(file="~/urchin_af/data/allele.freq.txt",out,row.names=FALSE, col.names=TRUE, quote=FALSE, sep="\t")
 
 # write file to filter vcf
 write.table(file="~/urchin_af/variants/keep.ontarget.txt", 

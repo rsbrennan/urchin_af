@@ -144,4 +144,3 @@ colnames(af.mean) <- c("D1_7_mean", "D1_8_mean", "D7_7_mean", "D7_8_mean")
 # add snp info, etc to this.
 keep.info <- snp.info[keep,1:2]
 
-write.table(file="~/urchin_af/data/allele.freq_all.txt",cbind(keep.info, dep.keep, af, af.mean), row.names=FALSE, col.names=TRUE, quote=FALSE, sep="\t")
