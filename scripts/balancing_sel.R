@@ -1,10 +1,3 @@
-
-library(dplyr)
-library(reshape)
-library(ggplot2)
-library(qvalue)
-library(scales)
-
 ############################################
 ##
 ## look at starting af
@@ -20,109 +13,120 @@ cut_off <- quantile(mydata$control_selection_pval, 0.01, na.rm=TRUE)
 # thin to those that are showing response in treatment
 selected <- mydata[(which(mydata$pH_sig == TRUE)),]
 
-dat <- selected[,grep("_af", colnames(selected))]
-dat <- dat[,grep("D1_8", colnames(dat))]
+dat <- selected[,grep("_af", colnames(selected))] 
+dat <- dat[,grep("D1_8", colnames(dat))] 
 
-sel.sfs = as.data.frame(lapply(dat,function(x)
+sel.sfs = as.data.frame(lapply(dat,function(x)  
           ifelse(x > 0.5, (1-x), x)))
 
-all.dat <- mydata[,grep("_af", colnames(mydata))]
-all.dat <- all.dat[,grep("D1_8", colnames(all.dat))]
+all.dat <- mydata[,grep("_af", colnames(mydata))] 
+all.dat <- all.dat[,grep("D1_8", colnames(all.dat))] 
 
-all.sfs = as.data.frame(lapply(all.dat,function(x)
+all.sfs = as.data.frame(lapply(all.dat,function(x)  
           ifelse(x > 0.5, (1-x), x)))
+
+random <- matrix(nrow=nrow(selected), ncol=4)
+
+perm.mean <- c()
+perm.median <- c()
+perm.75 <- c()
+perm.90 <- c()
+perm.95 <- c()
+perm.10 <- c()
+# permutation of groups. compare starting af summary stats of observed to these
+# this is just randomly assigning replicates to groups, then pulling out the same
+    # number of snps as under "selection" in pH
+
+for (i in 1: 500){
+    random <- matrix(nrow=nrow(selected), ncol=4)
+    random <- all.sfs[sample(nrow(all.sfs), size=nrow(random), replace=FALSE),]
+
+    perm.mean[i] <- mean(apply(random,1,mean))
+    perm.median[i] <- median(apply(random,1,mean))
+    perm.75[i] <- quantile(apply(random,1,mean), 0.75)
+    perm.90[i] <- quantile(apply(random,1,mean), 0.90)
+    perm.95[i] <- quantile(apply(random,1,mean), 0.95)
+    perm.10[i] <- quantile(apply(random,1,mean), 0.10)
+    if (i%%100 == 0){print(i)}
+}
 
 control <- mydata[(which(mydata$control_selection_pval < cut_off)),]
 control <- control[(which(control$lab_selected == TRUE)),]
 
 
-dat <- control[,grep("_af", colnames(control))]
-dat <- dat[,grep("D1_8", colnames(dat))]
+dat <- control[,grep("_af", colnames(control))] 
+dat <- dat[,grep("D1_8", colnames(dat))] 
 
-ctr.sfs = as.data.frame(lapply(dat,function(x)
+ctr.sfs = as.data.frame(lapply(dat,function(x)  
           ifelse(x > 0.5, (1-x), x)))
 
 
-#png("~/urchin_af/figures/pH_permutations.png", res=300, height=15, width=10, units="in")
-#par(mfrow = c(3, 2))
-#
-#hist(perm.mean, col="grey", breaks=100, xlim=c(0.17, 0.25))
-#abline(v=mean(apply(sel.sfs,1,mean)), col="red", lwd=3)
-#abline(v=mean(apply(ctr.sfs,1,mean)), col="green", lty=2, lwd=3)
-#
-#hist(perm.median, col="grey", breaks=100, xlim=c(0.12, 0.22))
-#abline(v=median(apply(sel.sfs,1,mean)), col="red", lwd=3)
-#abline(v=median(apply(ctr.sfs,1,mean)), col="green", lty=2, lwd=3)
-#
-#hist(perm.75, col="grey", breaks=100,
-#   xlim=c(0.2, .35))
-#abline(v=quantile(apply(sel.sfs,1,mean), 0.75), col="red", lwd=3)
-#abline(v=quantile(apply(ctr.sfs,1,mean), 0.75), col="green", lty=2, lwd=3)
-#
-#hist(perm.90, col="grey", breaks=100,
-#   xlim=c(0.35, quantile(apply(sel.sfs,1,mean), 0.90)*1.3))
-#abline(v=quantile(apply(sel.sfs,1,mean), 0.90), col="red", lwd=3)
-#abline(v=quantile(apply(ctr.sfs,1,mean), 0.90), col="green", lty=2, lwd=3)
-#
-#hist(perm.95, col="grey", breaks=100,
-#   xlim=c(0.4, quantile(apply(sel.sfs,1,mean), 0.95)*1.1))
-#abline(v=quantile(apply(sel.sfs,1,mean), 0.95), col="red", lwd=3)
-#abline(v=quantile(apply(ctr.sfs,1,mean), 0.95), col="green", lty=2, lwd=3)
-#
-#hist(perm.10, col="grey", breaks=100,
-#   xlim=c(0, 0.09))
-#abline(v=quantile(apply(sel.sfs,1,mean), 0.1), col="red", lwd=3)
-#abline(v=quantile(apply(ctr.sfs,1,mean), 0.1), col="green", lty=2, lwd=3)
-#
-#dev.off()
+png("~/urchin_af/figures/pH_permutations.png", res=300, height=15, width=10, units="in")
+par(mfrow = c(3, 2))
+
+hist(perm.mean, col="grey", breaks=100, xlim=c(0.17, 0.25))
+abline(v=mean(apply(sel.sfs,1,mean)), col="red", lwd=3)
+abline(v=mean(apply(ctr.sfs,1,mean)), col="green", lty=2, lwd=3)
+
+hist(perm.median, col="grey", breaks=100, xlim=c(0.12, 0.22))
+abline(v=median(apply(sel.sfs,1,mean)), col="red", lwd=3)
+abline(v=median(apply(ctr.sfs,1,mean)), col="green", lty=2, lwd=3)
+
+hist(perm.75, col="grey", breaks=100,
+    xlim=c(0.2, .35))
+abline(v=quantile(apply(sel.sfs,1,mean), 0.75), col="red", lwd=3)
+abline(v=quantile(apply(ctr.sfs,1,mean), 0.75), col="green", lty=2, lwd=3)
+
+hist(perm.90, col="grey", breaks=100,
+    xlim=c(0.35, quantile(apply(sel.sfs,1,mean), 0.90)*1.3))
+abline(v=quantile(apply(sel.sfs,1,mean), 0.90), col="red", lwd=3)
+abline(v=quantile(apply(ctr.sfs,1,mean), 0.90), col="green", lty=2, lwd=3)
+
+hist(perm.95, col="grey", breaks=100,
+    xlim=c(0.4, quantile(apply(sel.sfs,1,mean), 0.95)*1.1))
+abline(v=quantile(apply(sel.sfs,1,mean), 0.95), col="red", lwd=3)
+abline(v=quantile(apply(ctr.sfs,1,mean), 0.95), col="green", lty=2, lwd=3)
+
+hist(perm.10, col="grey", breaks=100,
+    xlim=c(0, 0.09))
+abline(v=quantile(apply(sel.sfs,1,mean), 0.1), col="red", lwd=3)
+abline(v=quantile(apply(ctr.sfs,1,mean), 0.1), col="green", lty=2, lwd=3)
+
+dev.off()
 
 ### plot his of control and treat maf
 
 png("~/urchin_af/figures/maf_folded_hist.png", res=300, height=7, width=7, units="in")
 par(mfrow = c(1, 1))
 
-hist(apply(all.sfs,1,mean),ylim=c(0,6), breaks=60, freq=FALSE, col = alpha("black", 0.4),
-    main="", xlab="allele frequency")
+hist(apply(all.sfs,1,mean),ylim=c(0,6), breaks=60, freq=FALSE, col = alpha("black", 0.4), 
+    main="Folded MAF", xlab="allele frequency")
 hist(apply(ctr.sfs,1,mean), breaks=60, freq=FALSE, col = alpha("blue", 0.4), add=T)
 hist(apply(sel.sfs,1,mean), breaks=60, freq=FALSE, col = alpha("red", 0.4), add=T)
 legend("topright", c("D1 pH8- all", "D7 pH 8-selected", "D7 pH 7-selected"), pch=19, col=c("black", "blue", "red"), )
 dev.off()
 
-png("~/urchin_af/figures/maf_folded_density_hist.png", res=301, height=7, width=7, units="in")
-plot(density(apply(ctr.sfs,1,mean)), ylim=c(0,6), xlim=c(0,0.5), lwd=3,
-    xlab="allele frequency", col="blue", main="")
-lines(density(apply(sel.sfs,1,mean)), col="red", lwd=3)
-lines(density(apply(all.sfs,1,mean)), col="black", lwd=3)
-legend("topright", c("D1 pH8- all", "D7 pH 8-selected", "D7 pH 7-selected"), pch=19, col=c("black", "blue", "red"), )
-dev.off()
-
-png("~/urchin_af/figures/maf_folded_combined_hist.png", res=300, height=7, width=7, units="in")
-par(mfrow = c(1, 1))
-hist(apply(all.sfs,1,mean),ylim=c(0,6), breaks=60, freq=FALSE, col = alpha("black", 0.4),
-    main="", xlab="allele frequency")
-hist(apply(ctr.sfs,1,mean), breaks=60, freq=FALSE, col = alpha("blue", 0.4), add=T)
-hist(apply(sel.sfs,1,mean), breaks=60, freq=FALSE, col = alpha("red", 0.4), add=T)
-legend("topright", c("D1 pH8- all", "D7 pH 8-selected", "D7 pH 7-selected"), pch=19, col=c("black", "blue", "red"), )
-lines(density(apply(ctr.sfs,1,mean)), col="blue", lwd=3)
-lines(density(apply(sel.sfs,1,mean)), col="red", lwd=3)
-lines(density(apply(all.sfs,1,mean)), col="black", lwd=3)
-dev.off()
 
 
 ################################################################
 ################################################################
 ## script to polarize allele frequency based on "adaptive allele"
-## then look at the starting af of the adaptive allele.
-## Basically, whichever is increasing in response to low pH is adaptive.
+## then look at the starting af of the adaptive allele. 
+## Basically, whichever is increasing in response to low pH is adaptive. 
 ################################################################
 ################################################################
 
+library(dplyr)
+library(reshape) 
+library(ggplot2)
+library(qvalue)
+library(scales)
 
 mydata <- read.table("~/urchin_af/analysis/cmh.out.txt", header=TRUE)
 
 snp.info <- read.table("~/urchin_af/analysis/af.info.txt", header=TRUE)
 
-snp <- read.table(text= system("zcat ~/urchin_af/variants/urchin_final.vcf.gz | grep -v '^##' | cut -f 10-", intern=TRUE),
+snp <- read.table(text= system("zcat ~/urchin_af/variants/urchin_final.vcf.gz | grep -v '^##' | cut -f 10-", intern=TRUE), 
     header=TRUE)
 snp.info <- read.table(text= system("zcat ~/urchin_af/variants/urchin_final.vcf.gz | grep -v '^##' | cut -f 1-8", intern=TRUE),
     header=FALSE)
@@ -221,7 +225,7 @@ for (i in 1:length(gp)){
 
 # next, want to figure out which allele is increasing in frequency from D1_8 to D7_7
 
-af1 <- af.mean$D7_7_DP1 - af.mean$D1_8_DP1
+af1 <- af.mean$D7_7_DP1 - af.mean$D1_8_DP1 
 af2 <- af.mean$D7_7_DP2 - af.mean$D1_8_DP2
 
 af_out <- rep(NA, nrow(af.mean))
@@ -240,44 +244,19 @@ for (i in 1:nrow(af.1)) {
 }
 
 # need to pull out only selected alleles
+
 snp.sel <- af_out[which(mydata$pH_sig == TRUE)]
 snp.af_d7 <- af_d7[which(mydata$pH_sig == TRUE)]
 snp.ctr <- af_out[which(mydata$control_selection_pval < cut_off)]
 
-snp.final <- snp.sel
-
 png("~/urchin_af/figures/maf_unfolded_hist.png", res=300, height=7, width=7, units="in")
 par(mfrow = c(1, 1))
 hist(af_out, freq=FALSE, ylim=c(0,4.6), col=alpha("black", alpha = 0.6), breaks=50,
-    main="", xlab="allele frequency")
-#hist(snp.ctr, freq=FALSE, add=T, col=alpha("blue", alpha = 0.4), breaks=50)
-hist(snp.sel, freq=FALSE, add=T, col=alpha("red", alpha = 0.4), breaks=50)
-legend("topright", c("D1 pH8- all", "D7 pH 7.5-selected"), pch=19, col=c("black", "red"), )
-dev.off()
-
-png("~/urchin_af/figures/maf_unfolded_density_hist.png", res=300, height=7, width=7, units="in")
-plot(density(af_out), ylim=c(0,3), lwd=3,
-    main="", xlab="allele frequency")
-#lines(density(snp.ctr), col="blue", lwd=3)
-lines(density(snp.sel), col="red", lwd=3)
-legend("topright", c("D1 pH8- all", "D7 pH 7.5-selected"), pch=19, col=c("black", "red"), )
-dev.off()
-
-png("~/urchin_af/figures/maf_unfolded_combined_hist.png", res=301, height=7, width=7, units="in")
-par(mfrow = c(1, 1))
-hist(af_out, freq=FALSE, ylim=c(0,4.6), col=alpha("black", alpha = 0.6), breaks=50,
-    main="", xlab="allele frequency")
+    main="Unfolded MAF", xlab="allele frequency")
 hist(snp.ctr, freq=FALSE, add=T, col=alpha("blue", alpha = 0.4), breaks=50)
 hist(snp.sel, freq=FALSE, add=T, col=alpha("red", alpha = 0.4), breaks=50)
 legend("topright", c("D1 pH8- all", "D7 pH 8-selected", "D7 pH 7-selected"), pch=19, col=c("black", "blue", "red"), )
-lines(density(af_out), ylim=c(0,3), lwd=3)
-lines(density(snp.ctr), col="blue", lwd=3)
-lines(density(snp.sel), col="red", lwd=3)
 dev.off()
-
-write.table(file="~/urchin_af/analysis/adaptive_allelefreq.txt",
-    cbind(mydata.1, af_out), row.names=FALSE, quote=FALSE)
-
 
 
 ################################################
@@ -289,26 +268,36 @@ write.table(file="~/urchin_af/analysis/adaptive_allelefreq.txt",
 # permute samples. pull out "responsive" loci. calc summary stats
 # try to run in parallel
 
-#library(foreach)
-#library(doParallel)
-#setup parallel backend to use many processors
-#cores=detectCores()
-#cl <- makeCluster(cores[1]-6) #not to overload your computer
-#registerDoParallel(cl)
+library(foreach)
+library(doParallel)
 library(scales)
+#setup parallel backend to use many processors
+cores=detectCores()
+cl <- makeCluster(cores[1]-6) #not to overload your computer. This is setting up 10 different computing environments
+registerDoParallel(cl)
+clusterCall(cl, function() library(scales)) # need to load library for each node.
 
 
-png("~/urchin_af/figures/maf_unfolded_permute.png", res=301, height=7, width=7, units="in")
+#png("~/urchin_af/figures/maf_unfolded_permute.png", res=301, height=7, width=7, units="in")
 
-plot(density(af_out), ylim=c(0,3), lwd=0,
-    main="", xlab="allele frequency")
+#plot(density(af_out), ylim=c(0,3), lwd=0,
+    #main="", xlab="allele frequency")
 
-ks.out <- c()
+#ks.out <- c()
 
-for( replicate in 1:500){
+# this transposes the results
+comb <- function(...) {
+  mapply('cbind', ..., SIMPLIFY=FALSE)
+}
 
-#loop
-control_selection_pval <- c()
+my_results_par <- foreach(perm_rep = 1:1000, .combine='comb', .multicombine=TRUE,
+                .init=list(list(), list())) %dopar%
+    {  
+#    sink("~/monitor.txt",append=TRUE)
+    cat(paste("Starting iteration",perm_rep,"\n"), 
+       file="~/log.monitor.txt", append=TRUE)
+
+   control_selection_pval <- c()
 
     DP1 <- mydata[,grep("_DP1", colnames(mydata))]
     DP2 <- mydata[,grep("_DP2", colnames(mydata))]
@@ -341,13 +330,7 @@ control_selection_pval <- c()
         #ftable(Data.xtabs)
     }
 
-# calc allele freq
-# pull out sfs of sig results
-
-# want to polarize by "adaptive" allele
-
-# first calc allele freq for each rep:
-
+    # pull out sfs of sig results
 
 cut_off <- quantile(control_selection_pval, 0.001, na.rm=TRUE)
 out <- cbind(dp1.sub,dp2.sub )
@@ -430,55 +413,70 @@ for (i in 1:nrow(af)) {
     }
 }
 
+cut_off <- quantile(control_selection_pval, 0.01, na.rm=TRUE)
+
 # need to pull out only selected alleles
-snp.sel <- af_out[which(mydata$pH_sig == TRUE)]
+snp.sel <- af_out[which(control_selection_pval < cut_off)]
+
+#lines(density(snp.sel), col=alpha("black", 0.2), lwd=1)
+
+# I think this might just add it to my_results_par
+
+list(ks.test(snp.final,snp.sel)$p.value, snp.sel)
+
+}
+
+
+#write.table(my_results_par, file="~/urchin_af/analysis/permutation.txt",  col.names=TRUE, quote=FALSE, sep="\t")
+
+#stop cluster
+stopCluster(cl)
 
 
 
-# plot
+png("~/urchin_af/figures/maf_unfolded_permute.png", res=301, height=7, width=7, units="in")
 
-#png("~/urchin_af/figures/maf_unfolded_hist.png", res=300, height=7, width=7, units="in")
-#par(mfrow = c(1, 1))
-#hist(af_out, freq=FALSE, ylim=c(0,4.6), col=alpha("black", alpha = 0.6), breaks=50,
-#   main="", xlab="allele frequency")
-#hist(snp.ctr, freq=FALSE, add=T, col=alpha("blue", alpha = 0.4), breaks=50)
-#hist(snp.sel, freq=FALSE, add=T, col=alpha("red", alpha = 0.4), breaks=50)
-#legend("topright", c("D1 pH8- all", "D7 pH 7.5-selected"), pch=19, col=c("black", "red"), )
-#dev.off()
+plot(density(af_out), ylim=c(0,3), lwd=0,
+    main="", xlab="allele frequency")
 
-#png("~/urchin_af/figures/maf_unfolded_density_hist.png", res=300, height=7, width=7, units="in")
-#plot(density(af_out), ylim=c(0,3), lwd=3,
-#   main="", xlab="allele frequency")
-#lines(density(snp.ctr), col="blue", lwd=3)
-
-
-lines(density(snp.sel), col=alpha("black", 0.2), lwd=1)
-
-
-#png("~/urchin_af/figures/maf_unfolded_combined_hist.png", res=301, height=7, width=7, units="in")
-#par(mfrow = c(1, 1))
-#hist(af_out, freq=FALSE, ylim=c(0,4.6), col=alpha("black", alpha = 0.6), breaks=50,
-#   main="", xlab="allele frequency")
-#hist(snp.ctr, freq=FALSE, add=T, col=alpha("blue", alpha = 0.4), breaks=50)
-#hist(snp.sel, freq=FALSE, add=T, col=alpha("red", alpha = 0.4), breaks=50)
-#legend("topright", c("D1 pH8- all", "D7 pH 8-selected", "D7 pH 7-selected"), pch=19, col=c("black", "blue", "red"), )
-#lines(density(af_out), ylim=c(0,3), lwd=3)
-#lines(density(snp.ctr), col="blue", lwd=3)
-#lines(density(snp.sel), col="red", lwd=3)
-#dev.off()
-
-## ks test
-
-ks.out[replicate] <- ks.test(snp.final,snp.sel)$p.value
-
-print(replicate)
-
-
+for (i in 1: ncol(my_results_par[[2]])){
+    lines(density(unlist(my_results_par[[2]][,i])), col=alpha("black", 0.2), lwd=1)
 }
 
 lines(density(snp.final), col=alpha("red", 1), lwd=3)
 
+legend("topright", c("permuted", "D7 pH 7.5-selected"), pch=19, col=c("black", "red"), )
+
 dev.off()
 
-legend("topright", c("D1 pH8- all", "D7 pH 7.5-selected"), pch=19, col=c("black", "red"), )
+# look at proportion significant
+
+which(unlist(my_results_par[[1]]) < 0.05)
+
+## plot results, calculate p values 
+
+png("~/urchin_af/figures/all_permutations.png", res=300, height=14, width=10, units="in")
+par(mfrow = c(3, 2))
+
+hist(my_results_par$perm.mean, col="grey", breaks=100, main="mean af",
+    xlim=c(0.165, 0.175))
+abline(v=mean(apply(sel.sfs,1,mean)), col="red", lwd=3)
+
+hist(my_results_par$perm.median, col="grey", breaks=100, , main="median af",
+    xlim=c(min(my_results_par$perm.median), .16))
+abline(v=mean(apply(sel.sfs,1,median), 0.95), col="red", lwd=3)
+
+hist(my_results_par$perm.75, col="grey", breaks=100, main="75 percentile",
+    xlim=c(min(my_results_par$perm.75), 0.28))
+abline(v=quantile(apply(sel.sfs,1,mean), 0.75), col="red", lwd=3)
+
+hist(my_results_par$perm.90, col="grey", breaks=100, main="90 percentile",
+    xlim=c(min(my_results_par$perm.90), quantile(apply(sel.sfs,1,mean), 0.90)*1.05))
+abline(v=quantile(apply(sel.sfs,1,mean), 0.90), col="red", lwd=3)
+
+hist(my_results_par$perm.95, col="grey", breaks=100, main="95 percentile",
+    xlim=c(0.37, 0.45))
+abline(v=quantile(apply(sel.sfs,1,mean), 0.95), col="red", lwd=3)
+
+dev.off()
 
