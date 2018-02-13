@@ -1,387 +1,642 @@
-############################################
-##
-## look at starting af
-## balancing selection
-##
-############################################
+# snp assignments
 
-
-################################################################
-################################################################
-## script to polarize allele frequency based on "adaptive allele"
-## then look at the starting af of the adaptive allele. 
-## Basically, whichever is increasing in response to low pH is adaptive. 
-################################################################
-################################################################
-
-library(dplyr)
-library(reshape) 
+library(stringr)
 library(ggplot2)
-library(qvalue)
-library(scales)
+library(gridExtra)
+library(MASS)
 
-cmh_dat <- read.table("~/urchin_af/analysis/cmh.out.txt", header=TRUE)
+dat <- read.table("~/urchin_af/variants/urchin_ann.vcf", stringsAsFactors=FALSE)
 
-snp.final <- af_out[which(cmh_dat$pH_sig == TRUE)]
+cmh <- read.table("~/urchin_af/analysis/cmh.master.out", header=TRUE)
 
+# loop over entire data set. count up annotattions. Make sure I'm pulling out what I think I am
+eff <- strsplit(as.character(dat$V8), split=",", fixed=TRUE)
 
-mydata <- read.table("~/urchin_af/analysis/cmh.out.txt", header=TRUE)
+one=0
+two=0
+three=0
+four=0
+five=0
+six=0
+seven=0
+eight=0
 
-snp.info <- read.table("~/urchin_af/analysis/af.info.txt", header=TRUE)
-
-snp <- read.table(text= system("zcat ~/urchin_af/variants/urchin_final.vcf.gz | grep -v '^##' | cut -f 10-", intern=TRUE), 
-    header=TRUE)
-snp.info <- read.table(text= system("zcat ~/urchin_af/variants/urchin_final.vcf.gz | grep -v '^##' | cut -f 1-8", intern=TRUE),
-    header=FALSE)
-colnames(snp.info) <- c("CHROM","POS","ID","REF","ALT","QUAL","FILTER","INFO")
-
-colnames(snp) <- gsub("OASV2_DNA_", "", colnames(snp))
-colnames(snp) <- gsub("S_", "", colnames(snp))
-colnames(snp) <- gsub("5_", "", colnames(snp))
-colnames(snp) <- gsub("0_", "", colnames(snp))
-
-# first order both dataframe
-# Sort by column index [1] then [3]
-snp.1 <- snp[
-  order( snp.info[,1], snp.info[,2] ),
-  ]
-
-mydata.1 <- mydata[
-  order( mydata[,1], mydata[,2] ),
-  ]
-
-snp <- snp.1
-mydata <- mydata.1
-
-out.split <- apply(snp, 2, function(x) strsplit(x, ":"))
-
-dat <- data.frame(row.names=seq(from=1, to=nrow(snp),by= 1))
-
-# get depths
-for(i in 1:length(names(out.split))){
-    ct <- matrix(unlist(out.split[[i]]), ncol=4, byrow=TRUE)
-    #
-    dat[,paste(names(out.split)[i], "DPtotal", sep="_")] <- sapply(strsplit(ct[,3], ","), "[", 1)
-    dat[,paste(names(out.split)[i], "DP1", sep="_")] <- sapply(strsplit(ct[,4], ","), "[", 1)
-    dat[,paste(names(out.split)[i], "DP2", sep="_")] <- sapply(strsplit(ct[,4], ","), "[", 2)
+for (i in 1:length(eff)){
+    if(length(eff[[i]]) == 1){
+        one=one+1
+    }
+    if(length(eff[[i]]) == 2){
+        two=two+1
+    }
+    if(length(eff[[i]]) == 3){
+        three=three+1
+    }
+    if(length(eff[[i]]) == 4){
+        four=four+1
+    }
+    if(length(eff[[i]]) == 5){
+        five=five+1
+    }
+    if(length(eff[[i]]) == 6){
+        six=six+1
+    }
+    if(length(eff[[i]]) == 7){
+        seven=seven+1
+    }
+    if(length(eff[[i]]) == 8){
+        eight=eight+1
+    }
 }
 
-#dep <-  dat[,grep("_DPtotal", colnames(dat), invert=TRUE)]
-
-#convert all to numeric
-dep <- data.frame(sapply(dat, function(x) as.numeric(as.character(x))))
-
-# want to figure out which allele is increasing in frequency from D1_8 to D7_7
-
-#first, calculate AF
-# make empty data frame to hold af
-af <- data.frame(matrix(ncol=ncol(dep), nrow=nrow(dep)))
-pop <- unique(substr(colnames(dep),1,7))
-colnames(af) <- colnames(dep)
-
-for(i in 1:ncol(af)){
-    # pull out DP1
-    dp1 <- as.numeric(dep[,grep(paste(pop[i], "_DP1", sep=""), colnames(dep))])
-    # DP2
-    dp2 <- as.numeric(dep[,grep(paste(pop[i], "_DP2", sep=""), colnames(dep))])
-    # total depth
-    dptot <- as.numeric(dep[,grep(paste(pop[i], "_DPtotal", sep=""), colnames(dep))])
-    #calc af
-    dp1.freq <- dp1/dptot
-    dp2.freq <- dp2/dptot
-    # add to af
-    af[,grep(paste(pop[i], "_DP1", sep=""), colnames(af))] <- dp1.freq
-    af[,grep(paste(pop[i], "_DP2", sep=""), colnames(af))] <- dp2.freq
-    af[,grep(paste(pop[i], "_DPtotal", sep=""), colnames(af))] <- dptot
-}
-
-# next, want to figure out which allele is increasing in frequency from D1_8 to D7_7
-
-# rm depth columns
-af.1 <-  af[,grep("_DPtotal", colnames(af), invert=TRUE)]
+#sanity check
+(one+two+three+four+five+six+seven+eight) == nrow(dat)
 
 
-# calculate mean of each group
-#### calc AF for each rep
+# it is possible that snps receive multiple annotations
+# I think in this case, it is best to take the most "severe"
+# order is: HIGH MODERATE LOW MODIFIER
 
+# make empty dataframe
+out <- dat
 
-# calculate mean of each group
-gp <- c("D1_7", "D1_8", "D7_7", "D7_8")
-af.mean <-  data.frame(matrix(ncol=8, nrow=nrow(af.1)))
-nm1 <- paste(gp, "_DP1", sep="")
-nm2 <- paste(gp, "_DP2", sep="")
-nm3 <- c(nm1, nm2)
-colnames(af.mean) <- nm3
-
-for (i in 1:length(gp)){
-    sub.gp <- af.1[,grep(gp[i], colnames(af.1))]
-
-    dp1 <- sub.gp[, grep("_DP1", colnames(sub.gp))]
-    dp1.mean <- apply(dp1,1,mean)
-    dp2 <- sub.gp[, grep("_DP2", colnames(sub.gp))]
-    dp2.mean <- apply(dp2,1,mean)
-
-    # add means to af.mean
-    af.mean[[paste(gp[i], "_DP1", sep="")]] <- dp1.mean
-    af.mean[[paste(gp[i], "_DP2", sep="")]] <- dp2.mean
-}
-
-# next, want to figure out which allele is increasing in frequency from D1_8 to D7_7
-
-af1 <- af.mean$D7_7_DP1 - af.mean$D1_8_DP1 
-af2 <- af.mean$D7_7_DP2 - af.mean$D1_8_DP2
-
-af_out <- rep(NA, nrow(af.mean))
-af_d7 <- rep(NA, nrow(af.mean))
-
-for (i in 1:nrow(af.1)) {
-    if(af1[i] > 0 ){
-        af_out[i] <- af.mean$D1_8_DP1[i]
-        af_d7[i] <- af.mean$D7_7_DP1[i]
+for (i in 1:length(eff)){
+    if(length(eff[[i]]) == 1){
+        out$V8[i] <- eff[[i]]
     }
     else{
-        af_out[i] <- af.mean$D1_8_DP2[i]
-        af_d7[i] <- af.mean$D7_7_DP2[i]
-
+        # pull out the change of each variant
+        change <- lapply(strsplit(eff[[i]], split="|", fixed=TRUE), '[[', 3)
+        #check if they all match. if so, just take the first one
+        if(length(unique(change)) == 1){
+            out$V8[i] <- eff[[i]][1]
+        }
+        #if they don't all match, take the one with highest change
+        else{
+            change <- gsub("MODIFIER", "1", change)
+            change <- gsub("LOW", "2", change)
+            change <- gsub("MODERATE", "3", change)
+            change <- gsub("HIGH", "4", change)
+            ef_max <- (max(change))
+            pick_max <- which(change == ef_max)
+            if(length(pick_max) == 1){
+                out$V8[i] <- eff[[i]][pick_max]
+            }
+            else{
+                out$V8[i] <- eff[[i]][pick_max[1]]
+            }
+        }
     }
+    #if(i%%1000 == 0){print(i)}
 }
 
-# need to pull out only selected alleles
+out$SNP <- paste(out$V1, out$V2, sep=":")
 
-snp.sel <- af_out[which(mydata$pH_sig == TRUE)]
-snp.af_d7 <- af_d7[which(mydata$pH_sig == TRUE)]
-snp.ctr <- af_out[which(mydata$control_selection_pval < cut_off)]
+out_ann <- data.frame(SNP=out$SNP, ANN=out$V8)
+# split annotation
+ann_split <- (str_split_fixed(out$V8, "\\|", n=16))
+out_ann <-(cbind(out$SNP, ann_split))
 
-png("~/urchin_af/figures/maf_unfolded_hist.png", res=300, height=7, width=7, units="in")
-par(mfrow = c(1, 1))
-hist(af_out, freq=FALSE, ylim=c(0,4.6), col=alpha("black", alpha = 0.6), breaks=50,
-    main="Unfolded MAF", xlab="allele frequency")
-hist(snp.ctr, freq=FALSE, add=T, col=alpha("blue", alpha = 0.4), breaks=50)
-hist(snp.sel, freq=FALSE, add=T, col=alpha("red", alpha = 0.4), breaks=50)
-legend("topright", c("D1 pH8- all", "D7 pH 8-selected", "D7 pH 7-selected"), pch=19, col=c("black", "blue", "red"), )
-dev.off()
+colnames(out_ann) <- c("SNP","Allele","Annotation","Annotation_Impact","Gene_Name","Gene_ID", "Feature_Type","Feature_ID", "Transcript_BioType","Rank","HGVS.c","HGVS.p","cDNA.pos",  "cDNA.length","CDS.pos","Distance","WARNINGS")
 
-snp.final <- snp.sel
+new <- merge(cmh,out_ann, by="SNP")
+
+write.table(file="~/urchin_af/analysis/cmh.annotations.out", new,
+    col.name=TRUE, quote=FALSE, row.name=FALSE )
 
 
-################################################
-######
-## permute to pull out false positives and compare sfs
-######
-################################################
+########################################
+# assign functional categories
+########################################
 
-# permute samples. pull out "responsive" loci. calc summary stats
-# try to run in parallel
+#intergenic: downstream_gene_variant, intergenic_region, upstream_gene_variant
+#intron: intron_variant, splice_region_variant&intron_variant,
+    # splice_acceptor_variant&intron_variant,
+    # splice_donor_variant&splice_region_variant&intron_variant,
+    # splice_region_variant, splice_region_variant&intron_variant,
+    # splice_region_variant&synonymous_variant
+#synonymous: synonymous_variant, stop_retained_variant
+#non-synonymous: missense_variant, stop_gained, stop_lost,
+    # missense_variant&splice_region_variant, start_lost, stop_gained&splice_region_variant,
+    # stop_lost&splice_region_variant, initiator_codon_variant
+#3' UTR: 3_prime_UTR_variant
+# unclear: non_coding_transcript_exon_variant,
+    # splice_region_variant&non_coding_transcript_exon_variant
+    # splice_region_variant&stop_retained_variant
 
-library(foreach)
-library(doParallel)
-library(scales)
-#setup parallel backend to use many processors
-cores=detectCores()
-cl <- makeCluster(cores[1]-6) #not to overload your computer. This is setting up 10 different computing environments
-registerDoParallel(cl)
-clusterCall(cl, function() library(scales)) # need to load library for each node.
+# looking at column Feature_Type
 
+ens <- as.data.frame(matrix(ncol=3, nrow=4))
+colnames(ens) <- c("gff", "SNP_class", "count")
+ens$SNP_class <- c("intergenic", "intron", "synonymous", "non-synonymous")
+ens$gff <- "ensembl"
+ens$count[1] <- length(which(new$Annotation == "downstream_gene_variant" |
+    new$Annotation == "intergenic_region" |
+    new$Annotation == "upstream_gene_variant"))
+ens$count[2] <- length(which(new$Annotation == "intron_variant" |
+    new$Annotation == "splice_region_variant&intron_variant"|
+    new$Annotation == "splice_acceptor_variant&intron_variant"|
+    new$Annotation == "splice_donor_variant&splice_region_variant&intron_variant"|
+    new$Annotation == "splice_region_variant"|
+    new$Annotation == "splice_region_variant&intron_variant" |
+    new$Annotation == "splice_region_variant&synonymous_variant"|
+    new$Annotation == "splice_region_variant&non_coding_transcript_exon_variant"|
+    new$Annotation == "non_coding_transcript_exon_variant"|
+    new$Annotation == "splice_donor_variant&intron_variant"))
+ens$count[3] <- length(which(new$Annotation == "synonymous_variant" |
+    new$Annotation == "stop_retained_variant"|
+    new$Annotation == "splice_region_variant&stop_retained_variant"))
+ens$count[4] <- length(which(new$Annotation == "missense_variant" |
+    new$Annotation == "stop_gained" |
+    new$Annotation == "stop_lost"|
+    new$Annotation == "missense_variant&splice_region_variant"|
+    new$Annotation == "start_lost"|
+    new$Annotation == "stop_gained&splice_region_variant"|
+    new$Annotation == "stop_lost&splice_region_variant"|
+    new$Annotation == "initiator_codon_variant"|
+    new$Annotation == "3_prime_UTR_variant"))
+ens$proportion <- ens$count/sum(ens$count)
 
-#png("~/urchin_af/figures/maf_unfolded_permute.png", res=301, height=7, width=7, units="in")
+# 18573 are non-coding
+# 22921 are coding
+dat_count <- ens
 
-#plot(density(af_out), ylim=c(0,3), lwd=0,
-    #main="", xlab="allele frequency")
+pdf("~/urchin_af/figures/snp_class.pdf", height=7, width=7)
 
-#ks.out <- c()
-
-# this transposes the results
-comb <- function(...) {
-  mapply('cbind', ..., SIMPLIFY=FALSE)
-}
-
-my_results_par <- foreach(perm_rep = 1:1000, .combine='comb', .multicombine=TRUE,
-                .init=list(list(), list())) %dopar%
-    {  
-#    sink("~/monitor.txt",append=TRUE)
-    cat(paste("Starting iteration",perm_rep,"\n"), 
-       file="~/log.monitor.txt", append=TRUE)
-
-   control_selection_pval <- c()
-
-    DP1 <- mydata[,grep("_DP1", colnames(mydata))]
-    DP2 <- mydata[,grep("_DP2", colnames(mydata))]
-    shuf <- sample(seq(1:ncol(DP1)))
-    DP1 <- DP1[,shuf]
-    DP2 <- DP2[,shuf]
-
-    dp1.sub <- DP1[,1:8]
-    colnames(dp1.sub) <- c("D1_1_dp1","D1_2_dp1","D1_3_dp1","D1_4_dp1","D7_1_dp1","D7_2_dp1","D7_3_dp1","D7_4_dp1")
-    dp2.sub <- DP2[,1:8]
-    colnames(dp2.sub) <- c("D1_1_dp2","D1_2_dp2","D1_3_dp2","D1_4_dp2","D7_1_dp2","D7_2_dp2","D7_3_dp2","D7_4_dp2")
-    for(i in 1:nrow(dp2.sub)){
-
-        sub_dp1 <- stack(dp1.sub[i,])
-        sub_dp1$allele <- rep("ac1", nrow(sub_dp1))
-        sub_dp2 <- stack(dp2.sub[i,])
-        sub_dp2$allele <- rep("ac2", nrow(sub_dp2))
-        colnames(sub_dp2) <- c("count", "ind", "allele")
-        colnames(sub_dp1) <- c("count", "ind", "allele")
-        sub_all <- rbind(sub_dp1, sub_dp2)
-        sub_all$day <- substr(sub_all$ind, 1,2)
-        sub_all$replicate <- substr(sub_all$ind, 4,4)
-        Data.xtabs = xtabs(count ~ allele + day + replicate,
-                       data=sub_all)
-        test <- mantelhaen.test(Data.xtabs)
-        control_selection_pval[i] <- test$p.value
-
-        #if (i%%1000 == 0){print(i)}
-
-        #ftable(Data.xtabs)
-    }
-
-    # pull out sfs of sig results
-
-cut_off <- quantile(control_selection_pval, 0.001, na.rm=TRUE)
-out <- cbind(dp1.sub,dp2.sub )
-pop <- colnames(out)
-
-af <- data.frame(matrix(ncol=ncol(out), nrow=nrow(out)))
-colnames(af) <- pop
-
-for(i in 1:8){
-    #pull out pop lab
-    pop_nm <- substr(pop[i],1,4)
-    # pull out DP1
-    dp1 <- as.numeric(out[,grep(paste(pop_nm, "_dp1", sep=""), colnames(out))])
-    # total depth
-    dp2 <- as.numeric(out[,grep(paste(pop_nm, "_dp2", sep=""), colnames(out))])
-    #calc af
-    a.freq <- dp1/(dp1+dp2)
-    # add to af
-    af[,i] <- a.freq
-    #print(i)
-}
-for(i in 9:16){
-    #pull out pop lab
-    pop_nm <- substr(pop[i],1,4)
-    # pull out DP1
-    dp1 <- as.numeric(out[,grep(paste(pop_nm, "_dp1", sep=""), colnames(out))])
-    # total depth
-    dp2 <- as.numeric(out[,grep(paste(pop_nm, "_dp2", sep=""), colnames(out))])
-    #calc af
-    a.freq <- dp2/(dp1+dp2)
-    # add to af
-    af[,i] <- a.freq
-    #print(i)
-}
-
-
-
-# calculate mean of each group
-#### calc AF for each rep
-
-
-# calculate mean of each group
-gp <- c("D1", "D7")
-af.mean <-  data.frame(matrix(ncol=4, nrow=nrow(af)))
-nm1 <- paste(gp, "_dp1", sep="")
-nm2 <- paste(gp, "_dp2", sep="")
-nm3 <- c(nm1, nm2)
-colnames(af.mean) <- nm3
-
-for (i in 1:length(gp)){
-    sub.gp <- af[,grep(gp[i], colnames(af))]
-
-    dp1 <- sub.gp[, grep("_dp1", colnames(sub.gp))]
-    dp1.mean <- apply(dp1,1,mean)
-    dp2 <- sub.gp[, grep("_dp2", colnames(sub.gp))]
-    dp2.mean <- apply(dp2,1,mean)
-
-    # add means to af.mean
-    af.mean[[paste(gp[i], "_dp1", sep="")]] <- dp1.mean
-    af.mean[[paste(gp[i], "_dp2", sep="")]] <- dp2.mean
-}
-
-# next, want to figure out which allele is increasing in frequency from D1_8 to D7_7
-
-af1 <- af.mean$D7_dp1 - af.mean$D1_dp1
-af2 <- af.mean$D7_dp2 - af.mean$D1_dp2
-
-af_out <- rep(NA, nrow(af.mean))
-af_d7 <- rep(NA, nrow(af.mean))
-
-for (i in 1:nrow(af)) {
-    if(af1[i] > 0 ){
-        af_out[i] <- af.mean$D1_dp1[i]
-        af_d7[i] <- af.mean$D7_dp1[i]
-    }
-    else{
-        af_out[i] <- af.mean$D1_dp2[i]
-        af_d7[i] <- af.mean$D7_dp2[i]
-
-    }
-}
-
-cut_off <- quantile(control_selection_pval, 0.01, na.rm=TRUE)
-
-# need to pull out only selected alleles
-snp.sel <- af_out[which(control_selection_pval < cut_off)]
-
-#lines(density(snp.sel), col=alpha("black", 0.2), lwd=1)
-
-# I think this might just add it to my_results_par
-
-list(ks.test(snp.final,snp.sel)$p.value, snp.sel)
-
-}
-
-
-#write.table(my_results_par, file="~/urchin_af/analysis/permutation.txt",  col.names=TRUE, quote=FALSE, sep="\t")
-
-#stop cluster
-stopCluster(cl)
-
-
-
-png("~/urchin_af/figures/maf_unfolded_permute.png", res=301, height=7, width=7, units="in")
-
-plot(density(af_out), ylim=c(0,3), lwd=0,
-    main="", xlab="allele frequency")
-
-for (i in 1: ncol(my_results_par[[2]])){
-    lines(density(unlist(my_results_par[[2]][,i])), col=alpha("black", 0.2), lwd=1)
-}
-
-lines(density(snp.final), col=alpha("red", 1), lwd=3)
-
-legend("topright", c("permuted", "D7 pH 7.5-selected"), pch=19, col=c("black", "red"), )
+a <- ggplot(data=dat_count, aes(x=SNP_class, y=proportion, group="SNP_class")) +
+geom_bar(stat="identity", color="black", position=position_dodge())+
+  theme_bw() + scale_fill_manual(values=c('gray50'))
+a
 
 dev.off()
 
-# look at proportion significant
+#############
+# split into selected and non
+#############
 
-which(unlist(my_results_par[[1]]) < 0.05)
+ens.sel <- as.data.frame(matrix(ncol=3, nrow=4))
+colnames(ens.sel) <- c("gff", "SNP_class", "count")
+ens.sel$SNP_class <- c("intergenic", "intron", "synonymous", "non-synonymous")
+ens.sel$gff <- "selected"
+new.sel <- new[which(new$sig ==TRUE),]
 
-## plot results, calculate p values 
+ens.sel$count[1] <- length(which(new.sel$Annotation == "downstream_gene_variant" |
+    new.sel$Annotation == "intergenic_region" |
+    new.sel$Annotation == "upstream_gene_variant"))
+ens.sel$count[2] <- length(which(new.sel$Annotation == "intron_variant" |
+    new.sel$Annotation == "splice_region_variant&intron_variant"|
+    new.sel$Annotation == "splice_acceptor_variant&intron_variant"|
+    new.sel$Annotation == "splice_donor_variant&splice_region_variant&intron_variant"|
+    new.sel$Annotation == "splice_region_variant"|
+    new.sel$Annotation == "splice_region_variant&intron_variant" |
+    new.sel$Annotation == "splice_region_variant&synonymous_variant"|
+    new.sel$Annotation == "splice_region_variant&non_coding_transcript_exon_variant"|
+    new.sel$Annotation == "non_coding_transcript_exon_variant"|
+    new.sel$Annotation == "splice_donor_variant&intron_variant"))
+ens.sel$count[3] <- length(which(new.sel$Annotation == "synonymous_variant" |
+    new.sel$Annotation == "stop_retained_variant"|
+    new.sel$Annotation == "splice_region_variant&stop_retained_variant"))
+ens.sel$count[4] <- length(which(new.sel$Annotation == "missense_variant" |
+    new.sel$Annotation == "stop_gained" |
+    new.sel$Annotation == "stop_lost"|
+    new.sel$Annotation == "missense_variant&splice_region_variant"|
+    new.sel$Annotation == "start_lost"|
+    new.sel$Annotation == "stop_gained&splice_region_variant"|
+    new.sel$Annotation == "stop_lost&splice_region_variant"|
+    new.sel$Annotation == "initiator_codon_variant"|
+    new.sel$Annotation == "3_prime_UTR_variant"))
+ens.sel$proportion <- ens.sel$count/sum(ens.sel$count)
 
-png("~/urchin_af/figures/all_permutations.png", res=300, height=14, width=10, units="in")
-par(mfrow = c(3, 2))
+#neutral loci
+ens.neut <- as.data.frame(matrix(ncol=3, nrow=4))
+colnames(ens.neut) <- c("gff", "SNP_class", "count")
+ens.neut$SNP_class <- c("intergenic", "intron", "synonymous", "non-synonymous")
+ens.neut$gff <- "neutral"
+new.neut <- new[which(new$sig ==FALSE),]
 
-hist(my_results_par$perm.mean, col="grey", breaks=100, main="mean af",
-    xlim=c(0.165, 0.175))
-abline(v=mean(apply(sel.sfs,1,mean)), col="red", lwd=3)
+ens.neut$count[1] <- length(which(new.neut$Annotation == "downstream_gene_variant" |
+    new.neut$Annotation == "intergenic_region" |
+    new.neut$Annotation == "upstream_gene_variant"))
+ens.neut$count[2] <- length(which(new.neut$Annotation == "intron_variant" |
+    new.neut$Annotation == "splice_region_variant&intron_variant"|
+    new.neut$Annotation == "splice_acceptor_variant&intron_variant"|
+    new.neut$Annotation == "splice_donor_variant&splice_region_variant&intron_variant"|
+    new.neut$Annotation == "splice_region_variant"|
+    new.neut$Annotation == "splice_region_variant&intron_variant" |
+    new.neut$Annotation == "splice_region_variant&synonymous_variant"|
+    new.neut$Annotation == "splice_region_variant&non_coding_transcript_exon_variant"|
+    new.neut$Annotation == "non_coding_transcript_exon_variant"|
+    new.neut$Annotation == "splice_donor_variant&intron_variant"))
+ens.neut$count[3] <- length(which(new.neut$Annotation == "synonymous_variant" |
+    new.neut$Annotation == "stop_retained_variant"|
+    new.neut$Annotation == "splice_region_variant&stop_retained_variant"))
+ens.neut$count[4] <- length(which(new.neut$Annotation == "missense_variant" |
+    new.neut$Annotation == "stop_gained" |
+    new.neut$Annotation == "stop_lost"|
+    new.neut$Annotation == "missense_variant&splice_region_variant"|
+    new.neut$Annotation == "start_lost"|
+    new.neut$Annotation == "stop_gained&splice_region_variant"|
+    new.neut$Annotation == "stop_lost&splice_region_variant"|
+    new.neut$Annotation == "initiator_codon_variant"|
+    new.neut$Annotation == "3_prime_UTR_variant"))
+ens.neut$proportion <- ens.neut$count/sum(ens.neut$count)
 
-hist(my_results_par$perm.median, col="grey", breaks=100, , main="median af",
-    xlim=c(min(my_results_par$perm.median), .16))
-abline(v=mean(apply(sel.sfs,1,median), 0.95), col="red", lwd=3)
+ens_all <- rbind(ens.neut, ens.sel)
 
-hist(my_results_par$perm.75, col="grey", breaks=100, main="75 percentile",
-    xlim=c(min(my_results_par$perm.75), 0.28))
-abline(v=quantile(apply(sel.sfs,1,mean), 0.75), col="red", lwd=3)
+a <- ggplot(data=ens_all, aes(x=SNP_class, y=proportion, fill=gff)) +
+geom_bar(stat="identity", color="black", position=position_dodge())+
+  theme_bw() + scale_fill_manual(values=c('royalblue4','tomato3')) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))+
+  theme(legend.title=element_blank())
+a
 
-hist(my_results_par$perm.90, col="grey", breaks=100, main="90 percentile",
-    xlim=c(min(my_results_par$perm.90), quantile(apply(sel.sfs,1,mean), 0.90)*1.05))
-abline(v=quantile(apply(sel.sfs,1,mean), 0.90), col="red", lwd=3)
+# make contingency table
 
-hist(my_results_par$perm.95, col="grey", breaks=100, main="95 percentile",
-    xlim=c(0.37, 0.45))
-abline(v=quantile(apply(sel.sfs,1,mean), 0.95), col="red", lwd=3)
+r1 <- c(4375, 40709-4375)
+r2 <- c(98, 785-98)
+
+din <- matrix(c(r1, r2),
+                nrow=2,
+                byrow=TRUE)
+rownames(din) <- c("neutral", "selected")
+colnames(din) <- c("non-synonymous", "all")
+
+chisq.test(din,correct=FALSE)
+
+
+###################################################
+###################################################
+###################################################
+### I would be super cool to see (with either/both) the
+# distribution of NS across MAF bins for selected and neutral loci.
+###################################################
+###################################################
+###################################################
+
+# need to:
+    # identify the Non-syn variants
+    # pull out selected vs neutral
+    # bin into maf
+        # both folded and not
+    # repeat for transcriptome and ensembl
+
+
+# read in allele frequency data
+
+mydata <- read.table("~/urchin_af/analysis/adaptive_allelefreq.txt", header=TRUE)
+mydata$SNP <- paste(mydata$CHROM, mydata$POS, sep=":")
+new.sel <- new[which(new$sig ==TRUE),]
+new.neut <- new[which(new$sig ==FALSE),]
+
+# fold af
+mydata$folded_af = unlist(lapply(mydata$D1_8_mean,function(x)
+          ifelse(x > 0.5, (1-x), x)), use.names=FALSE)
+
+
+# ns variants
+ns.sel <- new.sel[which(new.sel$Annotation == "missense_variant" |
+    new.sel$Annotation == "stop_gained" |
+    new.sel$Annotation == "stop_lost"|
+    new.sel$Annotation == "missense_variant&splice_region_variant"|
+    new.sel$Annotation == "start_lost"|
+    new.sel$Annotation == "stop_gained&splice_region_variant"|
+    new.sel$Annotation == "stop_lost&splice_region_variant"|
+    new.sel$Annotation == "initiator_codon_variant"|
+    new.sel$Annotation == "3_prime_UTR_variant"),]
+ns.neut <- new.neut[which(new.neut$Annotation == "missense_variant" |
+    new.neut$Annotation == "stop_gained" |
+    new.neut$Annotation == "stop_lost"|
+    new.neut$Annotation == "missense_variant&splice_region_variant"|
+    new.neut$Annotation == "start_lost"|
+    new.neut$Annotation == "stop_gained&splice_region_variant"|
+    new.neut$Annotation == "stop_lost&splice_region_variant"|
+    new.neut$Annotation == "initiator_codon_variant"|
+    new.neut$Annotation == "3_prime_UTR_variant"),]
+
+# syn variants
+syn.sel <- new.sel[new.sel$Annotation == "synonymous_variant" |
+    new.sel$Annotation == "stop_retained_variant"|
+    new.sel$Annotation == "splice_region_variant&stop_retained_variant",]
+syn.neut <- new.neut[new.neut$Annotation == "synonymous_variant" |
+    new.neut$Annotation == "stop_retained_variant"|
+    new.neut$Annotation == "splice_region_variant&stop_retained_variant",]
+
+# introns
+intron.sel <- new.sel[new.sel$Annotation == "intron_variant" |
+    new.sel$Annotation == "splice_region_variant&intron_variant"|
+    new.sel$Annotation == "splice_acceptor_variant&intron_variant"|
+    new.sel$Annotation == "splice_donor_variant&splice_region_variant&intron_variant"|
+    new.sel$Annotation == "splice_region_variant"|
+    new.sel$Annotation == "splice_region_variant&intron_variant" |
+    new.sel$Annotation == "splice_region_variant&synonymous_variant"|
+    new.sel$Annotation == "splice_region_variant&non_coding_transcript_exon_variant"|
+    new.sel$Annotation == "non_coding_transcript_exon_variant"|
+    new.sel$Annotation == "splice_donor_variant&intron_variant",]
+intron.neut <- new.neut[new.neut$Annotation == "intron_variant" |
+    new.neut$Annotation == "splice_region_variant&intron_variant"|
+    new.neut$Annotation == "splice_acceptor_variant&intron_variant"|
+    new.neut$Annotation == "splice_donor_variant&splice_region_variant&intron_variant"|
+    new.neut$Annotation == "splice_region_variant"|
+    new.neut$Annotation == "splice_region_variant&intron_variant" |
+    new.neut$Annotation == "splice_region_variant&synonymous_variant"|
+    new.neut$Annotation == "splice_region_variant&non_coding_transcript_exon_variant"|
+    new.neut$Annotation == "non_coding_transcript_exon_variant"|
+    new.neut$Annotation == "splice_donor_variant&intron_variant",]
+
+#intergenic
+intergen.sel <- new.sel[new.sel$Annotation == "downstream_gene_variant" |
+    new.sel$Annotation == "intergenic_region" |
+    new.sel$Annotation == "upstream_gene_variant",]
+intergen.neut <- new.neut[new.neut$Annotation == "downstream_gene_variant" |
+    new.neut$Annotation == "intergenic_region" |
+    new.neut$Annotation == "upstream_gene_variant",]
+
+
+# unfolded allele freqs are col: af_out
+# merge datasets:
+ns.sel.merge <- merge(mydata,ns.sel, by="SNP" )
+ns.neut.merge <- merge(mydata,ns.neut, by="SNP" )
+ns.all <- rbind(ns.neut.merge,ns.sel.merge)
+
+syn.sel.merge <- merge(mydata,syn.sel, by="SNP" )
+syn.neut.merge <- merge(mydata,syn.neut, by="SNP" )
+syn.all <- rbind(syn.neut.merge,syn.sel.merge)
+
+intron.sel.merge <- merge(mydata,intron.sel, by="SNP" )
+intron.neut.merge <- merge(mydata,intron.neut, by="SNP" )
+intron.all <- rbind(intron.neut.merge,intron.sel.merge)
+
+intergen.sel.merge <- merge(mydata,intergen.sel, by="SNP" )
+intergen.neut.merge <- merge(mydata,intergen.neut, by="SNP" )
+intergen.all <- rbind(intergen.neut.merge, intergen.sel.merge)
+
+
+# folded
+ns.neut.merge$fold_bin <- cut(ns.neut.merge$folded_af, breaks=seq(0,0.5, 0.05))
+ns.sel.merge$fold_bin <- cut(ns.sel.merge$folded_af, breaks=seq(0,0.5, 0.05))
+ns.all$fold_bin <- cut(ns.all$folded_af, breaks=seq(0,0.5, 0.05))
+
+syn.neut.merge$fold_bin <- cut(syn.neut.merge$folded_af, breaks=seq(0,0.5, 0.05))
+syn.sel.merge$fold_bin <- cut(syn.sel.merge$folded_af, breaks=seq(0,0.5, 0.05))
+syn.all$fold_bin <- cut(syn.all$folded_af, breaks=seq(0,0.5, 0.05))
+
+intron.neut.merge$fold_bin <- cut(intron.neut.merge$folded_af, breaks=seq(0,0.5, 0.05))
+intron.sel.merge$fold_bin <- cut(intron.sel.merge$folded_af, breaks=seq(0,0.5, 0.05))
+intron.all$fold_bin <- cut(intron.all$folded_af, breaks=seq(0,0.5, 0.05))
+
+intergen.neut.merge$fold_bin <- cut(intergen.neut.merge$folded_af, breaks=seq(0,0.5, 0.05))
+intergen.sel.merge$fold_bin <- cut(intergen.sel.merge$folded_af, breaks=seq(0,0.5, 0.05))
+intergen.all$fold_bin <- cut(intergen.all$folded_af, breaks=seq(0,0.5, 0.05))
+
+# unfolded
+ns.neut.merge$unfold_bin <- cut(ns.neut.merge$af_out, breaks=seq(0,1, 0.05))
+ns.sel.merge$unfold_bin <- cut(ns.sel.merge$af_out, breaks=seq(0,1, 0.05))
+ns.all$unfold_bin <- cut(ns.all$af_out, breaks=seq(0,1, 0.05))
+
+syn.neut.merge$unfold_bin <- cut(syn.neut.merge$af_out, breaks=seq(0,1, 0.05))
+syn.sel.merge$unfold_bin <- cut(syn.sel.merge$af_out, breaks=seq(0,1, 0.05))
+syn.all$unfold_bin <- cut(syn.all$af_out, breaks=seq(0,1, 0.05))
+
+intron.neut.merge$unfold_bin <- cut(intron.neut.merge$af_out, breaks=seq(0,1, 0.05))
+intron.sel.merge$unfold_bin <- cut(intron.sel.merge$af_out, breaks=seq(0,1, 0.05))
+intron.all$unfold_bin <- cut(intron.all$af_out, breaks=seq(0,1, 0.05))
+
+intergen.neut.merge$unfold_bin <- cut(intergen.neut.merge$af_out, breaks=seq(0,1, 0.05))
+intergen.sel.merge$unfold_bin <- cut(intergen.sel.merge$af_out, breaks=seq(0,1, 0.05))
+intergen.all$unfold_bin <- cut(intergen.all$af_out, breaks=seq(0,1, 0.05))
+
+### folded #####
+bin <- c("0-0.05", "0.05-0.1", "0.1-0.15", "0.15-0.2", "0.2-0.25", "0.25-0.3", "0.3-0.35", "0.35-0.4", "0.4-0.45", "0.45-0.5")
+
+# make barplot of neutral vs selected 
+ns_neut_foldfreq <- table(ns.neut.merge$fold_bin)/sum(table(ns.neut.merge$fold_bin))
+ns_sel_foldfreq <- table(ns.sel.merge$fold_bin)/sum(table(ns.sel.merge$fold_bin))
+ns_all_foldfreq <- table(ns.all$fold_bin)/sum(table(ns.all$fold_bin))
+
+syn_neut_foldfreq <- table(syn.neut.merge$fold_bin)/sum(table(syn.neut.merge$fold_bin))
+syn_sel_foldfreq <- table(syn.sel.merge$fold_bin)/sum(table(syn.sel.merge$fold_bin))
+syn_all_foldfreq <- table(syn.all$fold_bin)/sum(table(syn.all$fold_bin))
+
+intron_neut_foldfreq <- table(intron.neut.merge$fold_bin)/sum(table(intron.neut.merge$fold_bin))
+intron_sel_foldfreq <- table(intron.sel.merge$fold_bin)/sum(table(intron.sel.merge$fold_bin))
+intron_all_foldfreq <- table(intron.all$fold_bin)/sum(table(intron.all$fold_bin))
+
+intergen_neut_foldfreq <- table(intergen.neut.merge$fold_bin)/sum(table(intergen.neut.merge$fold_bin))
+intergen_sel_foldfreq <- table(intergen.sel.merge$fold_bin)/sum(table(intergen.sel.merge$fold_bin))
+intergen_all_foldfreq <- table(intergen.all$fold_bin)/sum(table(intergen.all$fold_bin))
+
+
+# merge into tables for plotting
+ns.sel.dat <- data.frame(class=rep("selected", length(bin)),bin=bin,
+            allele_frequency=as.vector(ns_sel_foldfreq))
+ns.neut.dat <- data.frame(class=rep("neutral", length(bin)),bin=bin,
+            allele_frequency=as.vector(ns_neut_foldfreq))
+ns.all.dat <- data.frame(class=rep("all variants", length(bin)),bin=bin,
+            allele_frequency=as.vector(ns_all_foldfreq))
+ns.fq.dat <- rbind(ns.sel.dat, ns.neut.dat, ns.all.dat)
+
+syn.sel.dat <- data.frame(class=rep("selected", length(bin)), bin=bin,
+            allele_frequency=as.vector(syn_sel_foldfreq))
+syn.neut.dat <- data.frame(class=rep("neutral", length(bin)),bin=bin,
+            allele_frequency=as.vector(syn_neut_foldfreq))
+syn.all.dat <- data.frame(class=rep("all variants", length(bin)),bin=bin,
+            allele_frequency=as.vector(syn_all_foldfreq))
+syn.fq.dat <- rbind(syn.sel.dat, syn.neut.dat, syn.all.dat)
+
+intron.sel.dat <- data.frame(class=rep("selected", length(bin)), bin=bin,
+            allele_frequency=as.vector(intron_sel_foldfreq))
+intron.neut.dat <- data.frame(class=rep("neutral", length(bin)),bin=bin,
+            allele_frequency=as.vector(intron_neut_foldfreq))
+intron.all.dat <- data.frame(class=rep("all variants", length(bin)),bin=bin,
+            allele_frequency=as.vector(intron_all_foldfreq))
+intron.fq.dat <- rbind(intron.sel.dat, intron.neut.dat, intron.all.dat)
+
+intergen.sel.dat <- data.frame(class=rep("selected", length(bin)), bin=bin,
+            allele_frequency=as.vector(intergen_sel_foldfreq))
+intergen.neut.dat <- data.frame(class=rep("neutral", length(bin)),bin=bin,
+            allele_frequency=as.vector(intergen_neut_foldfreq))
+intergen.all.dat <- data.frame(class=rep("all variants", length(bin)),bin=bin,
+            allele_frequency=as.vector(intergen_all_foldfreq))
+intergen.fq.dat <- rbind(intergen.sel.dat, intergen.neut.dat, intergen.all.dat)
+
+
+a <- ggplot(data=ns.fq.dat, aes(x=bin, y=allele_frequency, fill=class, group=class)) +
+geom_bar(stat="identity", color="black", position=position_dodge())+
+  theme_bw() + scale_fill_manual(values=c('royalblue4','tomato3', 'grey38'))+
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))+
+  ggtitle("non-synonymous")+
+  theme(legend.title=element_blank())
+
+b <- ggplot(data=syn.fq.dat, aes(x=bin, y=allele_frequency, fill=class, group=class)) +
+geom_bar(stat="identity", color="black", position=position_dodge())+
+  theme_bw() + scale_fill_manual(values=c('royalblue4','tomato3', 'grey38'))+
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))+
+  ggtitle("synonymous")+
+  theme(legend.title=element_blank())
+
+c <- ggplot(data=intron.fq.dat, aes(x=bin, y=allele_frequency, fill=class, group=class)) +
+geom_bar(stat="identity", color="black", position=position_dodge())+
+  theme_bw() + scale_fill_manual(values=c('royalblue4','tomato3', 'grey38'))+
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))+
+  ggtitle("intron")+
+  theme(legend.title=element_blank())
+
+d <- ggplot(data=intergen.fq.dat, aes(x=bin, y=allele_frequency, fill=class, group=class)) +
+geom_bar(stat="identity", color="black", position=position_dodge())+
+  theme_bw() + scale_fill_manual(values=c('royalblue4','tomato3', 'grey38'))+
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))+
+  ggtitle("intergenic")+
+  theme(legend.title=element_blank())
+
+
+pdf("~/urchin_af/figures/AF_categories_folded_af.pdf", height=5, width=10)
+
+grid.arrange(a, b, c, d, ncol=2)
+
+dev.off()
+
+####### Unfolded #########
+
+bin <- c("0-0.05", "0.05-0.1", "0.1-0.15", "0.15-0.2", "0.2-0.25",
+    "0.25-0.3", "0.3-0.35", "0.35-0.4", "0.4-0.45", "0.45-0.5",
+    "0.5-0.55", "0.55-0.6", "0.6-0.65", "0.65-0.7", "0.7-0.75",
+    "0.75-0.8", "0.8-0.85", "0.85-0.9", "0.9-0.95", "0.95-1")
+
+# make barplot of neutral vs selected 
+ns_neut_unfoldfreq <- table(ns.neut.merge$unfold_bin)/sum(table(ns.neut.merge$unfold_bin))
+ns_sel_unfoldfreq <- table(ns.sel.merge$unfold_bin)/sum(table(ns.sel.merge$unfold_bin))
+ns_all_unfoldfreq <- table(ns.all$unfold_bin)/sum(table(ns.all$unfold_bin))
+
+syn_neut_unfoldfreq <- table(syn.neut.merge$unfold_bin)/sum(table(syn.neut.merge$unfold_bin))
+syn_sel_unfoldfreq <- table(syn.sel.merge$unfold_bin)/sum(table(syn.sel.merge$unfold_bin))
+syn_all_unfoldfreq <- table(syn.all$unfold_bin)/sum(table(syn.all$unfold_bin))
+
+intron_neut_unfoldfreq <- table(intron.neut.merge$unfold_bin)/sum(table(intron.neut.merge$unfold_bin))
+intron_sel_unfoldfreq <- table(intron.sel.merge$unfold_bin)/sum(table(intron.sel.merge$unfold_bin))
+intron_all_unfoldfreq <- table(intron.all$unfold_bin)/sum(table(intron.all$unfold_bin))
+
+intergen_neut_unfoldfreq <- table(intergen.neut.merge$unfold_bin)/sum(table(intergen.neut.merge$unfold_bin))
+intergen_sel_unfoldfreq <- table(intergen.sel.merge$unfold_bin)/sum(table(intergen.sel.merge$unfold_bin))
+intergen_all_unfoldfreq <- table(intergen.all$unfold_bin)/sum(table(intergen.all$unfold_bin))
+
+# merge into tables for plotting
+ns.sel.dat <- data.frame(class=rep("selected", length(bin)),bin=bin,
+            allele_frequency=as.vector(ns_sel_unfoldfreq))
+ns.neut.dat <- data.frame(class=rep("neutral", length(bin)),bin=bin,
+            allele_frequency=as.vector(ns_neut_unfoldfreq))
+ns.all.dat <- data.frame(class=rep("all variants", length(bin)),bin=bin,
+            allele_frequency=as.vector(ns_all_unfoldfreq))
+ns.fq.dat <- rbind(ns.sel.dat, ns.neut.dat, ns.all.dat)
+
+syn.sel.dat <- data.frame(class=rep("selected", length(bin)), bin=bin,
+            allele_frequency=as.vector(syn_sel_unfoldfreq))
+syn.neut.dat <- data.frame(class=rep("neutral", length(bin)),bin=bin,
+            allele_frequency=as.vector(syn_neut_unfoldfreq))
+syn.all.dat <- data.frame(class=rep("all variants", length(bin)),bin=bin,
+            allele_frequency=as.vector(syn_all_unfoldfreq))
+syn.fq.dat <- rbind(syn.sel.dat, syn.neut.dat, syn.all.dat)
+
+intron.sel.dat <- data.frame(class=rep("selected", length(bin)), bin=bin,
+            allele_frequency=as.vector(intron_sel_unfoldfreq))
+intron.neut.dat <- data.frame(class=rep("neutral", length(bin)),bin=bin,
+            allele_frequency=as.vector(intron_neut_unfoldfreq))
+intron.all.dat <- data.frame(class=rep("all variants", length(bin)),bin=bin,
+            allele_frequency=as.vector(intron_all_unfoldfreq))
+intron.fq.dat <- rbind(intron.sel.dat, intron.neut.dat, intron.all.dat)
+
+intergen.sel.dat <- data.frame(class=rep("selected", length(bin)), bin=bin,
+            allele_frequency=as.vector(intergen_sel_unfoldfreq))
+intergen.neut.dat <- data.frame(class=rep("neutral", length(bin)),bin=bin,
+            allele_frequency=as.vector(intergen_neut_unfoldfreq))
+intergen.all.dat <- data.frame(class=rep("all variants", length(bin)),bin=bin,
+            allele_frequency=as.vector(intergen_all_unfoldfreq))
+intergen.fq.dat <- rbind(intergen.sel.dat, intergen.neut.dat, intergen.all.dat)
+
+
+
+a <- ggplot(data=ns.fq.dat, aes(x=bin, y=allele_frequency, fill=class, group=class)) +
+geom_bar(stat="identity", color="black", position=position_dodge())+
+  theme_bw() + scale_fill_manual(values=c('royalblue4','tomato3', 'grey38'))+
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))+
+  ggtitle("non-synonymous")+
+  theme(legend.title=element_blank())
+
+b <- ggplot(data=syn.fq.dat, aes(x=bin, y=allele_frequency, fill=class, group=class)) +
+geom_bar(stat="identity", color="black", position=position_dodge())+
+  theme_bw() + scale_fill_manual(values=c('royalblue4','tomato3', 'grey38'))+
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))+
+  ggtitle("synonymous")+
+  theme(legend.title=element_blank())
+
+c <- ggplot(data=intron.fq.dat, aes(x=bin, y=allele_frequency, fill=class, group=class)) +
+geom_bar(stat="identity", color="black", position=position_dodge())+
+  theme_bw() + scale_fill_manual(values=c('royalblue4','tomato3', 'grey38'))+
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))+
+  ggtitle("intron")+
+  theme(legend.title=element_blank())
+
+d <- ggplot(data=intergen.fq.dat, aes(x=bin, y=allele_frequency, fill=class, group=class)) +
+geom_bar(stat="identity", color="black", position=position_dodge())+
+  theme_bw() + scale_fill_manual(values=c('royalblue4','tomato3', 'grey38'))+
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))+
+  ggtitle("intergenic")+
+  theme(legend.title=element_blank())
+
+png("~/urchin_af/figures/AF_categories_unfolded_bin.png", height=7, res=300, units="in", width=10)
+grid.arrange(a, b, c, d, ncol=2)
+dev.off()
+
+
+####### density plots
+
+selected <- mydata[which(mydata$pH_sig==TRUE),]
+neutral <- mydata[which(mydata$pH_sig==FALSE),]
+
+# NS density plot
+
+png("~/urchin_af/figures/AF_categories_unfolded_af.png", height=7, width=10, res=300, units="in")
+
+par(mfrow=c(2,2), mar=c(5.1, 4.1, 4.1, 2.1))
+
+plot(density(ns.neut.merge$af_out), ylim=c(0, 2.7), xlim=c(-0.05,1.05), lwd=3,
+    xlab="allele frequency", col="blue", main="")
+lines(density(ns.sel.merge$af_out), col="red", lwd=3)
+#lines(density(ns.all$af_out), col="black", lwd=3)
+lines(density(selected$af_out), col="red", lty=2, lwd=3)
+#lines(density(neutral$af_out), col="black", lty=2, lwd=3)
+title(main="non-synonymous")
+#legend("topright", c("NS-neutral", "NS-selected", "NS-all", "Genome-wide: selected", "Genome-wide: neutral"),
+ #   lty=c(1, 1, 1, 2, 2), col=c("blue", "red", "black", "red", "black"), lwd=2 )
+
+plot(density(syn.neut.merge$af_out), ylim=c(0, 2.7), xlim=c(-0.05,1.05), lwd=3,
+    xlab="allele frequency", col="blue", main="")
+lines(density(syn.sel.merge$af_out), col="red", lwd=3)
+#lines(density(syn.all$af_out), col="black", lwd=3)
+lines(density(selected$af_out), col="red", lty=2, lwd=3)
+#lines(density(neutral$af_out), col="black", lty=2, lwd=3)
+title(main="synonymous")
+
+plot(density(intron.neut.merge$af_out), ylim=c(0, 2.7), xlim=c(-0.05,1.05), lwd=3,
+    xlab="allele frequency", col="blue", main="")
+lines(density(intron.sel.merge$af_out), col="red", lwd=3)
+#lines(density(intron.all$af_out), col="black", lwd=3)
+lines(density(selected$af_out), col="red", lty=2, lwd=3)
+#lines(density(neutral$af_out), col="black", lty=2, lwd=3)
+title(main="intron")
+
+plot(density(intergen.neut.merge$af_out), ylim=c(0, 2.7), xlim=c(-0.05,1.05), lwd=3,
+    xlab="allele frequency", col="blue", main="")
+lines(density(intergen.sel.merge$af_out), col="red", lwd=3)
+#lines(density(intergen.all$af_out), col="black", lwd=3)
+lines(density(selected$af_out), col="red", lty=2, lwd=3)
+#lines(density(neutral$af_out), col="black", lty=2, lwd=3)
+title(main="intergenic")
+
+
+# add legend. basically overlaying new empty plot
+par(fig = c(0.025, 1, 0, 1), oma = c(0, 0, .15, 0), mar = c(0, 0, 0, 0), new = TRUE)
+plot(0,0, type = "n", bty = "n", xaxt = "n", yaxt = "n")
+legend("center", c("neutral", "selected", "Genome-wide: selected"),
+    lty=c(1, 1, 2), col=c("blue", "red", "red"), lwd=2 )
 
 dev.off()
 
