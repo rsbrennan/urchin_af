@@ -5,108 +5,6 @@
 ##
 ############################################
 
-# compare pH selection vs control
-
-mydata <- read.table("~/urchin_af/analysis/cmh.out.txt", header=TRUE)
-cut_off <- quantile(mydata$control_selection_pval, 0.01, na.rm=TRUE)
-
-# thin to those that are showing response in treatment
-selected <- mydata[(which(mydata$pH_sig == TRUE)),]
-
-dat <- selected[,grep("_af", colnames(selected))] 
-dat <- dat[,grep("D1_8", colnames(dat))] 
-
-sel.sfs = as.data.frame(lapply(dat,function(x)  
-          ifelse(x > 0.5, (1-x), x)))
-
-all.dat <- mydata[,grep("_af", colnames(mydata))] 
-all.dat <- all.dat[,grep("D1_8", colnames(all.dat))] 
-
-all.sfs = as.data.frame(lapply(all.dat,function(x)  
-          ifelse(x > 0.5, (1-x), x)))
-
-random <- matrix(nrow=nrow(selected), ncol=4)
-
-perm.mean <- c()
-perm.median <- c()
-perm.75 <- c()
-perm.90 <- c()
-perm.95 <- c()
-perm.10 <- c()
-# permutation of groups. compare starting af summary stats of observed to these
-# this is just randomly assigning replicates to groups, then pulling out the same
-    # number of snps as under "selection" in pH
-
-for (i in 1: 500){
-    random <- matrix(nrow=nrow(selected), ncol=4)
-    random <- all.sfs[sample(nrow(all.sfs), size=nrow(random), replace=FALSE),]
-
-    perm.mean[i] <- mean(apply(random,1,mean))
-    perm.median[i] <- median(apply(random,1,mean))
-    perm.75[i] <- quantile(apply(random,1,mean), 0.75)
-    perm.90[i] <- quantile(apply(random,1,mean), 0.90)
-    perm.95[i] <- quantile(apply(random,1,mean), 0.95)
-    perm.10[i] <- quantile(apply(random,1,mean), 0.10)
-    if (i%%100 == 0){print(i)}
-}
-
-control <- mydata[(which(mydata$control_selection_pval < cut_off)),]
-control <- control[(which(control$lab_selected == TRUE)),]
-
-
-dat <- control[,grep("_af", colnames(control))] 
-dat <- dat[,grep("D1_8", colnames(dat))] 
-
-ctr.sfs = as.data.frame(lapply(dat,function(x)  
-          ifelse(x > 0.5, (1-x), x)))
-
-
-png("~/urchin_af/figures/pH_permutations.png", res=300, height=15, width=10, units="in")
-par(mfrow = c(3, 2))
-
-hist(perm.mean, col="grey", breaks=100, xlim=c(0.17, 0.25))
-abline(v=mean(apply(sel.sfs,1,mean)), col="red", lwd=3)
-abline(v=mean(apply(ctr.sfs,1,mean)), col="green", lty=2, lwd=3)
-
-hist(perm.median, col="grey", breaks=100, xlim=c(0.12, 0.22))
-abline(v=median(apply(sel.sfs,1,mean)), col="red", lwd=3)
-abline(v=median(apply(ctr.sfs,1,mean)), col="green", lty=2, lwd=3)
-
-hist(perm.75, col="grey", breaks=100,
-    xlim=c(0.2, .35))
-abline(v=quantile(apply(sel.sfs,1,mean), 0.75), col="red", lwd=3)
-abline(v=quantile(apply(ctr.sfs,1,mean), 0.75), col="green", lty=2, lwd=3)
-
-hist(perm.90, col="grey", breaks=100,
-    xlim=c(0.35, quantile(apply(sel.sfs,1,mean), 0.90)*1.3))
-abline(v=quantile(apply(sel.sfs,1,mean), 0.90), col="red", lwd=3)
-abline(v=quantile(apply(ctr.sfs,1,mean), 0.90), col="green", lty=2, lwd=3)
-
-hist(perm.95, col="grey", breaks=100,
-    xlim=c(0.4, quantile(apply(sel.sfs,1,mean), 0.95)*1.1))
-abline(v=quantile(apply(sel.sfs,1,mean), 0.95), col="red", lwd=3)
-abline(v=quantile(apply(ctr.sfs,1,mean), 0.95), col="green", lty=2, lwd=3)
-
-hist(perm.10, col="grey", breaks=100,
-    xlim=c(0, 0.09))
-abline(v=quantile(apply(sel.sfs,1,mean), 0.1), col="red", lwd=3)
-abline(v=quantile(apply(ctr.sfs,1,mean), 0.1), col="green", lty=2, lwd=3)
-
-dev.off()
-
-### plot his of control and treat maf
-
-png("~/urchin_af/figures/maf_folded_hist.png", res=300, height=7, width=7, units="in")
-par(mfrow = c(1, 1))
-
-hist(apply(all.sfs,1,mean),ylim=c(0,6), breaks=60, freq=FALSE, col = alpha("black", 0.4), 
-    main="Folded MAF", xlab="allele frequency")
-hist(apply(ctr.sfs,1,mean), breaks=60, freq=FALSE, col = alpha("blue", 0.4), add=T)
-hist(apply(sel.sfs,1,mean), breaks=60, freq=FALSE, col = alpha("red", 0.4), add=T)
-legend("topright", c("D1 pH8- all", "D7 pH 8-selected", "D7 pH 7-selected"), pch=19, col=c("black", "blue", "red"), )
-dev.off()
-
-
 
 ################################################################
 ################################################################
@@ -121,6 +19,11 @@ library(reshape)
 library(ggplot2)
 library(qvalue)
 library(scales)
+
+cmh_dat <- read.table("~/urchin_af/analysis/cmh.out.txt", header=TRUE)
+
+snp.final <- af_out[which(cmh_dat$pH_sig == TRUE)]
+
 
 mydata <- read.table("~/urchin_af/analysis/cmh.out.txt", header=TRUE)
 
@@ -257,6 +160,8 @@ hist(snp.ctr, freq=FALSE, add=T, col=alpha("blue", alpha = 0.4), breaks=50)
 hist(snp.sel, freq=FALSE, add=T, col=alpha("red", alpha = 0.4), breaks=50)
 legend("topright", c("D1 pH8- all", "D7 pH 8-selected", "D7 pH 7-selected"), pch=19, col=c("black", "blue", "red"), )
 dev.off()
+
+snp.final <- snp.sel
 
 
 ################################################
