@@ -20,7 +20,7 @@ go_path = '/users/r/b/rbrennan/reference/ensembl_goterms.txt'
 #spu_path = '/users/r/b/rbrennan/reference/whl22.v1.0.tmap.gz'
 
 #make empty array to save output
-go_out = np.empty(shape=(41494,4), dtype = object)
+go_out = np.empty(shape=(41494,5), dtype = object)
 
 i=0 # start counter
 # 41495 rows
@@ -29,13 +29,12 @@ i=0 # start counter
 
 with open('/users/r/b/rbrennan/urchin_af/analysis/cmh.annotations.out') as master_file:
     header_line = next(master_file) # skip header row
-    start_time = time.time()
+    #start_time = time.time()
     for idx, line in enumerate(master_file):
         tmp_snp = line.split("\t")[0]
         tmp_spu = line.split("\t")[5]
         tmp_go = ""
         tmp_short = ""
-        tmp_name = ""
 
         with open(go_path) as go_file:
             for go_line in go_file:
@@ -73,13 +72,14 @@ with open('/users/r/b/rbrennan/urchin_af/analysis/cmh.annotations.out') as maste
                         # is not empty, already have names, etc. just add additional go terms
                         if len(tmp_go) > 0:
                             tmp_go = tmp_go + ";" +  go_line.split("\t")[6]
-
+        # pull out class
+        tmp_class = line.split("\t")[18].split("\n")[0]
         tmp_short1 = tmp_short.split(";")
         tmp_short2 = ";".join(list(OrderedDict.fromkeys(tmp_short1)))
         tmp_go1 = tmp_go.split(";")
         tmp_go2 = ";".join(list(OrderedDict.fromkeys(tmp_go1)))
         # I think that if no GO term will be blank... but double check
-        out_1 = tmp_snp + "\t" + tmp_spu + "\t" + tmp_short2 + "\t" + tmp_go2
+        out_1 = tmp_snp + "\t" + tmp_spu + "\t" + tmp_short2 + "\t" + tmp_class + "\t" + tmp_go2
         #go_out = np.vstack((go_out, out_1.split("\t")))
         go_out[idx]= out_1.split("\t")
         i=i+1
@@ -130,7 +130,7 @@ with open('/users/r/b/rbrennan/urchin_af/analysis/cmh.out.txt') as sig_file:
 
 # combine and save all
 out_1 = np.column_stack((sig_out, nm_out, go_out))
-head = "CHR" + "\t" + "POS" + "\t" + "PVAL"  + "\t" + "sig" + "\t" + "SPU_1" + "\t" + "description" + "\t" + "SNP"  "\t" + "SPU_2"  + "\t" + "short_name" + "\t" + "GO_term"
+head = "CHR" + "\t" + "POS" + "\t" + "PVAL"  + "\t" + "sig" + "\t" + "SPU_1" + "\t" + "description" + "\t" + "SNP"  "\t" + "SPU_2"  + "\t" + "short_name" + "\t" + "class" + "\t" + "GO_term"
 head = head.split("\t")
 out_final = np.vstack((head, out_1))
 np.savetxt('/users/r/b/rbrennan/urchin_af/analysis/cmh.master.out', out_final,fmt='%5s', delimiter='\t')
