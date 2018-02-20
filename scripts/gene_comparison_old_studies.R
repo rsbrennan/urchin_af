@@ -60,3 +60,68 @@ ann <- read.table("~/urchin_af/analysis/cmh.annotations.out", header=TRUE, sep="
 
 ann_icb <- merge(ann, sig_icb, by="SNP")
 ann_evans <- merge(ann, sig_evans, by="SNP")
+
+##############################
+##### test for sig overlap
+##############################
+
+pesp_all <- read.table("~/urchin_af/variants/Pespeni_LarvalSelection_spu.txt",
+    header=TRUE, stringsAsFactors=FALSE)
+# pull out significant spu from cmh
+
+dat_spu <- unique(unlist(strsplit(as.character(unique(dat$SPU)), ";")))
+
+dat.sig <- dat[which(dat$sig == TRUE),]
+sig_spu <- unique(unlist(strsplit(as.character(unique(dat.sig$SPU)), ";")))
+
+# all possible genes included
+pnas <- unique(pesp_all$X.CHROM)
+universe <- length( unique(c(dat_spu, pnas)))
+pnas_sig
+pnas_sig <- as.character(pesp_pnas$V1)
+
+mat <- matrix(
+   c( length(intersect(sig_spu, pnas_sig)),
+      length(setdiff(pnas_sig, sig_spu)),
+      length(setdiff(sig_spu, pnas_sig)),
+      universe - length(union(sig_spu, pnas_sig))),
+   nrow=2
+   )
+
+fr <- fisher.test(mat, alternative="greater")
+fr
+
+# all possible genes included
+pnas <- unique(pesp_all$X.CHROM)
+universe <- length( unique(c(dat_spu, pnas)))
+
+icb_sig <- as.character(pesp_icb$V1)
+
+mat <- matrix(
+   c( length(intersect(sig_spu, icb_sig)),
+      length(setdiff(icb_sig, sig_spu)),
+      length(setdiff(sig_spu, icb_sig)),
+      universe - length(union(sig_spu, icb_sig))),
+   nrow=2
+   )
+
+fr <- fisher.test(mat, alternative="greater")
+fr
+
+# all possible genes included
+pnas <- unique(pesp_all$X.CHROM)
+universe <- length( unique(c(dat_spu, pnas)))
+
+evans_sig <- as.character(evans$V1)
+
+mat <- matrix(
+   c( length(intersect(sig_spu, evans_sig)),
+      length(setdiff(evans_sig, sig_spu)),
+      length(setdiff(sig_spu, evans_sig)),
+      universe - length(union(sig_spu, evans_sig))),
+   nrow=2
+   )
+
+fr <- fisher.test(mat, alternative="greater")
+fr
+

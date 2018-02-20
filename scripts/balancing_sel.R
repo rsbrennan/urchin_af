@@ -7,8 +7,6 @@ library(MASS)
 
 dat <- read.table("~/urchin_af/variants/urchin_ann.vcf", stringsAsFactors=FALSE)
 
-cmh <- read.table("~/urchin_af/analysis/cmh.master.out", header=TRUE)
-
 # loop over entire data set. count up annotattions. Make sure I'm pulling out what I think I am
 eff <- strsplit(as.character(dat$V8), split=",", fixed=TRUE)
 
@@ -56,7 +54,17 @@ for (i in 1:length(eff)){
 # I think in this case, it is best to take the most "severe"
 # order is: HIGH MODERATE LOW MODIFIER
 
-# make empty dataframe
+## from snpeff manual:
+# Effect sort order. When multiple effects are reported, SnpEff sorts the effects the following way:
+    # Putative impact: Effects having higher putative impact are first.
+    # Effect type: Effects assumed to be more deleterious effects first.
+    # Canonical trancript before non-canonical.
+    # Marker genomic coordinates (e.g. genes starting before first).
+
+# bc of this, should be safe to simply take the first annotation,
+    # ie, the one with the highest potential impact
+
+# make dataframe
 out <- dat
 
 for (i in 1:length(eff)){
@@ -64,31 +72,15 @@ for (i in 1:length(eff)){
         out$V8[i] <- eff[[i]]
     }
     else{
-        # pull out the change of each variant
-        change <- lapply(strsplit(eff[[i]], split="|", fixed=TRUE), '[[', 3)
+        # pull out the effect of each variant
+        #change <- lapply(strsplit(eff[[i]], split="|", fixed=TRUE), '[[', 2)
+        #change.eff <- lapply(strsplit(eff[[i]], split="|", fixed=TRUE), '[[', 3)
         #check if they all match. if so, just take the first one
-        if(length(unique(change)) == 1){
-            out$V8[i] <- eff[[i]][1]
-        }
-        #if they don't all match, take the one with highest change
-        else{
-            change <- gsub("MODIFIER", "1", change)
-            change <- gsub("LOW", "2", change)
-            change <- gsub("MODERATE", "3", change)
-            change <- gsub("HIGH", "4", change)
-            ef_max <- (max(change))
-            pick_max <- which(change == ef_max)
-            if(length(pick_max) == 1){
-                out$V8[i] <- eff[[i]][pick_max]
-            }
-            else{
-                out$V8[i] <- eff[[i]][pick_max[1]]
-            }
+        out$V8[i] <- eff[[i]][1]
         }
     }
-    #if(i%%1000 == 0){print(i)}
-}
 
+# add snp id
 out$SNP <- paste(out$V1, out$V2, sep=":")
 
 out_ann <- data.frame(SNP=out$SNP, ANN=out$V8)
@@ -97,12 +89,6 @@ ann_split <- (str_split_fixed(out$V8, "\\|", n=16))
 out_ann <-(cbind(out$SNP, ann_split))
 
 colnames(out_ann) <- c("SNP","Allele","Annotation","Annotation_Impact","Gene_Name","Gene_ID", "Feature_Type","Feature_ID", "Transcript_BioType","Rank","HGVS.c","HGVS.p","cDNA.pos",  "cDNA.length","CDS.pos","Distance","WARNINGS")
-
-new <- merge(cmh,out_ann, by="SNP")
-
-write.table(file="~/urchin_af/analysis/cmh.annotations.out", new,
-    col.name=TRUE, quote=FALSE, row.name=FALSE )
-
 
 ########################################
 # assign functional categories
@@ -125,14 +111,18 @@ write.table(file="~/urchin_af/analysis/cmh.annotations.out", new,
 
 # looking at column Feature_Type
 
-ens <- as.data.frame(matrix(ncol=3, nrow=4))
-colnames(ens) <- c("gff", "SNP_class", "count")
-ens$SNP_class <- c("intergenic", "intron", "synonymous", "non-synonymous")
-ens$gff <- "ensembl"
-ens$count[1] <- length(which(new$Annotation == "downstream_gene_variant" |
+# read in cmh results so can identify sig changes:
+
+cmh <- read.table("~/urchin_af/analysis/cmh.out.txt", header=TRUE)
+
+new <- as.data.frame(out_ann)
+new$sig <- cmh$pH_sig
+new$class <- c(NA) # also want to add in "class" ie, intergenic, etc
+
+new$class[which(new$Annotation == "downstream_gene_variant" |
     new$Annotation == "intergenic_region" |
-    new$Annotation == "upstream_gene_variant"))
-ens$count[2] <- length(which(new$Annotation == "intron_variant" |
+    new$Annotation == "upstream_gene_variant")] <- c("intergenic")
+new$class[which(new$Annotation == "intron_variant" |
     new$Annotation == "splice_region_variant&intron_variant"|
     new$Annotation == "splice_acceptor_variant&intron_variant"|
     new$Annotation == "splice_donor_variant&splice_region_variant&intron_variant"|
@@ -141,11 +131,11 @@ ens$count[2] <- length(which(new$Annotation == "intron_variant" |
     new$Annotation == "splice_region_variant&synonymous_variant"|
     new$Annotation == "splice_region_variant&non_coding_transcript_exon_variant"|
     new$Annotation == "non_coding_transcript_exon_variant"|
-    new$Annotation == "splice_donor_variant&intron_variant"))
-ens$count[3] <- length(which(new$Annotation == "synonymous_variant" |
+    new$Annotation == "splice_donor_variant&intron_variant")] <- c("intron")
+new$class[which(new$Annotation == "synonymous_variant" |
     new$Annotation == "stop_retained_variant"|
-    new$Annotation == "splice_region_variant&stop_retained_variant"))
-ens$count[4] <- length(which(new$Annotation == "missense_variant" |
+    new$Annotation == "splice_region_variant&stop_retained_variant")] <- c("synonymous")
+new$class[which(new$Annotation == "missense_variant" |
     new$Annotation == "stop_gained" |
     new$Annotation == "stop_lost"|
     new$Annotation == "missense_variant&splice_region_variant"|
@@ -153,11 +143,19 @@ ens$count[4] <- length(which(new$Annotation == "missense_variant" |
     new$Annotation == "stop_gained&splice_region_variant"|
     new$Annotation == "stop_lost&splice_region_variant"|
     new$Annotation == "initiator_codon_variant"|
-    new$Annotation == "3_prime_UTR_variant"))
+    new$Annotation == "3_prime_UTR_variant")] <- c("non-synonymous")
+
+ens <- as.data.frame(matrix(ncol=3, nrow=4))
+colnames(ens) <- c("gff", "SNP_class", "count")
+ens$SNP_class <- c("intergenic", "intron", "synonymous", "non-synonymous")
+ens$gff <- "ensembl"
+ens$count[1] <- length(which(new$class == "intergenic"))
+ens$count[2] <- length(which(new$class == "intron"))
+ens$count[3] <- length(which(new$class == "synonymous"))
+ens$count[4] <- length(which(new$class == "non-synonymous"))
+
 ens$proportion <- ens$count/sum(ens$count)
 
-# 18573 are non-coding
-# 22921 are coding
 dat_count <- ens
 
 pdf("~/urchin_af/figures/snp_class.pdf", height=7, width=7)
@@ -173,71 +171,34 @@ dev.off()
 # split into selected and non
 #############
 
+###############
+# selected loci
 ens.sel <- as.data.frame(matrix(ncol=3, nrow=4))
 colnames(ens.sel) <- c("gff", "SNP_class", "count")
 ens.sel$SNP_class <- c("intergenic", "intron", "synonymous", "non-synonymous")
 ens.sel$gff <- "selected"
 new.sel <- new[which(new$sig ==TRUE),]
 
-ens.sel$count[1] <- length(which(new.sel$Annotation == "downstream_gene_variant" |
-    new.sel$Annotation == "intergenic_region" |
-    new.sel$Annotation == "upstream_gene_variant"))
-ens.sel$count[2] <- length(which(new.sel$Annotation == "intron_variant" |
-    new.sel$Annotation == "splice_region_variant&intron_variant"|
-    new.sel$Annotation == "splice_acceptor_variant&intron_variant"|
-    new.sel$Annotation == "splice_donor_variant&splice_region_variant&intron_variant"|
-    new.sel$Annotation == "splice_region_variant"|
-    new.sel$Annotation == "splice_region_variant&intron_variant" |
-    new.sel$Annotation == "splice_region_variant&synonymous_variant"|
-    new.sel$Annotation == "splice_region_variant&non_coding_transcript_exon_variant"|
-    new.sel$Annotation == "non_coding_transcript_exon_variant"|
-    new.sel$Annotation == "splice_donor_variant&intron_variant"))
-ens.sel$count[3] <- length(which(new.sel$Annotation == "synonymous_variant" |
-    new.sel$Annotation == "stop_retained_variant"|
-    new.sel$Annotation == "splice_region_variant&stop_retained_variant"))
-ens.sel$count[4] <- length(which(new.sel$Annotation == "missense_variant" |
-    new.sel$Annotation == "stop_gained" |
-    new.sel$Annotation == "stop_lost"|
-    new.sel$Annotation == "missense_variant&splice_region_variant"|
-    new.sel$Annotation == "start_lost"|
-    new.sel$Annotation == "stop_gained&splice_region_variant"|
-    new.sel$Annotation == "stop_lost&splice_region_variant"|
-    new.sel$Annotation == "initiator_codon_variant"|
-    new.sel$Annotation == "3_prime_UTR_variant"))
+ens.sel$count[1] <- length(which(new.sel$class == "intergenic"))
+ens.sel$count[2] <- length(which(new.sel$class == "intron"))
+ens.sel$count[3] <- length(which(new.sel$class == "synonymous"))
+ens.sel$count[4] <- length(which(new.sel$class == "non-synonymous"))
+
 ens.sel$proportion <- ens.sel$count/sum(ens.sel$count)
 
-#neutral loci
+###############
+# neutral loci
 ens.neut <- as.data.frame(matrix(ncol=3, nrow=4))
 colnames(ens.neut) <- c("gff", "SNP_class", "count")
 ens.neut$SNP_class <- c("intergenic", "intron", "synonymous", "non-synonymous")
 ens.neut$gff <- "neutral"
 new.neut <- new[which(new$sig ==FALSE),]
 
-ens.neut$count[1] <- length(which(new.neut$Annotation == "downstream_gene_variant" |
-    new.neut$Annotation == "intergenic_region" |
-    new.neut$Annotation == "upstream_gene_variant"))
-ens.neut$count[2] <- length(which(new.neut$Annotation == "intron_variant" |
-    new.neut$Annotation == "splice_region_variant&intron_variant"|
-    new.neut$Annotation == "splice_acceptor_variant&intron_variant"|
-    new.neut$Annotation == "splice_donor_variant&splice_region_variant&intron_variant"|
-    new.neut$Annotation == "splice_region_variant"|
-    new.neut$Annotation == "splice_region_variant&intron_variant" |
-    new.neut$Annotation == "splice_region_variant&synonymous_variant"|
-    new.neut$Annotation == "splice_region_variant&non_coding_transcript_exon_variant"|
-    new.neut$Annotation == "non_coding_transcript_exon_variant"|
-    new.neut$Annotation == "splice_donor_variant&intron_variant"))
-ens.neut$count[3] <- length(which(new.neut$Annotation == "synonymous_variant" |
-    new.neut$Annotation == "stop_retained_variant"|
-    new.neut$Annotation == "splice_region_variant&stop_retained_variant"))
-ens.neut$count[4] <- length(which(new.neut$Annotation == "missense_variant" |
-    new.neut$Annotation == "stop_gained" |
-    new.neut$Annotation == "stop_lost"|
-    new.neut$Annotation == "missense_variant&splice_region_variant"|
-    new.neut$Annotation == "start_lost"|
-    new.neut$Annotation == "stop_gained&splice_region_variant"|
-    new.neut$Annotation == "stop_lost&splice_region_variant"|
-    new.neut$Annotation == "initiator_codon_variant"|
-    new.neut$Annotation == "3_prime_UTR_variant"))
+ens.neut$count[1] <- length(which(new.neut$class == "intergenic"))
+ens.neut$count[2] <- length(which(new.neut$class == "intron"))
+ens.neut$count[3] <- length(which(new.neut$class == "synonymous"))
+ens.neut$count[4] <- length(which(new.neut$class == "non-synonymous"))
+
 ens.neut$proportion <- ens.neut$count/sum(ens.neut$count)
 
 ens_all <- rbind(ens.neut, ens.sel)
@@ -263,6 +224,13 @@ colnames(din) <- c("non-synonymous", "all")
 chisq.test(din,correct=FALSE)
 
 
+
+####### 
+# write output
+
+write.table(file="~/urchin_af/analysis/cmh.annotations.out", new,
+    col.name=TRUE, quote=FALSE, row.name=FALSE, sep= "\t" )
+
 ###################################################
 ###################################################
 ###################################################
@@ -281,7 +249,6 @@ chisq.test(din,correct=FALSE)
 
 
 # read in allele frequency data
-
 mydata <- read.table("~/urchin_af/analysis/adaptive_allelefreq.txt", header=TRUE)
 mydata$SNP <- paste(mydata$CHROM, mydata$POS, sep=":")
 new.sel <- new[which(new$sig ==TRUE),]
@@ -293,62 +260,20 @@ mydata$folded_af = unlist(lapply(mydata$D1_8_mean,function(x)
 
 
 # ns variants
-ns.sel <- new.sel[which(new.sel$Annotation == "missense_variant" |
-    new.sel$Annotation == "stop_gained" |
-    new.sel$Annotation == "stop_lost"|
-    new.sel$Annotation == "missense_variant&splice_region_variant"|
-    new.sel$Annotation == "start_lost"|
-    new.sel$Annotation == "stop_gained&splice_region_variant"|
-    new.sel$Annotation == "stop_lost&splice_region_variant"|
-    new.sel$Annotation == "initiator_codon_variant"|
-    new.sel$Annotation == "3_prime_UTR_variant"),]
-ns.neut <- new.neut[which(new.neut$Annotation == "missense_variant" |
-    new.neut$Annotation == "stop_gained" |
-    new.neut$Annotation == "stop_lost"|
-    new.neut$Annotation == "missense_variant&splice_region_variant"|
-    new.neut$Annotation == "start_lost"|
-    new.neut$Annotation == "stop_gained&splice_region_variant"|
-    new.neut$Annotation == "stop_lost&splice_region_variant"|
-    new.neut$Annotation == "initiator_codon_variant"|
-    new.neut$Annotation == "3_prime_UTR_variant"),]
+ns.sel <- new.sel[which(new.sel$class == "non-synonymous",]
+ns.neut <- new.neut[which(new.neut$class == "non-synonymous",]
 
 # syn variants
-syn.sel <- new.sel[new.sel$Annotation == "synonymous_variant" |
-    new.sel$Annotation == "stop_retained_variant"|
-    new.sel$Annotation == "splice_region_variant&stop_retained_variant",]
-syn.neut <- new.neut[new.neut$Annotation == "synonymous_variant" |
-    new.neut$Annotation == "stop_retained_variant"|
-    new.neut$Annotation == "splice_region_variant&stop_retained_variant",]
+syn.sel <- new.sel[new.sel$class == "synonymous",]
+syn.neut <- new.neut[new.neut$class == "synonymous",]
 
 # introns
-intron.sel <- new.sel[new.sel$Annotation == "intron_variant" |
-    new.sel$Annotation == "splice_region_variant&intron_variant"|
-    new.sel$Annotation == "splice_acceptor_variant&intron_variant"|
-    new.sel$Annotation == "splice_donor_variant&splice_region_variant&intron_variant"|
-    new.sel$Annotation == "splice_region_variant"|
-    new.sel$Annotation == "splice_region_variant&intron_variant" |
-    new.sel$Annotation == "splice_region_variant&synonymous_variant"|
-    new.sel$Annotation == "splice_region_variant&non_coding_transcript_exon_variant"|
-    new.sel$Annotation == "non_coding_transcript_exon_variant"|
-    new.sel$Annotation == "splice_donor_variant&intron_variant",]
-intron.neut <- new.neut[new.neut$Annotation == "intron_variant" |
-    new.neut$Annotation == "splice_region_variant&intron_variant"|
-    new.neut$Annotation == "splice_acceptor_variant&intron_variant"|
-    new.neut$Annotation == "splice_donor_variant&splice_region_variant&intron_variant"|
-    new.neut$Annotation == "splice_region_variant"|
-    new.neut$Annotation == "splice_region_variant&intron_variant" |
-    new.neut$Annotation == "splice_region_variant&synonymous_variant"|
-    new.neut$Annotation == "splice_region_variant&non_coding_transcript_exon_variant"|
-    new.neut$Annotation == "non_coding_transcript_exon_variant"|
-    new.neut$Annotation == "splice_donor_variant&intron_variant",]
+intron.sel <- new.sel[new.sel$class == "intron",]
+intron.neut <- new.neut[new.neut$class == "intron",]
 
 #intergenic
-intergen.sel <- new.sel[new.sel$Annotation == "downstream_gene_variant" |
-    new.sel$Annotation == "intergenic_region" |
-    new.sel$Annotation == "upstream_gene_variant",]
-intergen.neut <- new.neut[new.neut$Annotation == "downstream_gene_variant" |
-    new.neut$Annotation == "intergenic_region" |
-    new.neut$Annotation == "upstream_gene_variant",]
+intergen.sel <- new.sel[new.sel$class == "intergenic",]
+intergen.neut <- new.neut[new.neut$class == "intergenic",]
 
 
 # unfolded allele freqs are col: af_out
@@ -407,7 +332,7 @@ intergen.all$unfold_bin <- cut(intergen.all$af_out, breaks=seq(0,1, 0.05))
 ### folded #####
 bin <- c("0-0.05", "0.05-0.1", "0.1-0.15", "0.15-0.2", "0.2-0.25", "0.25-0.3", "0.3-0.35", "0.35-0.4", "0.4-0.45", "0.45-0.5")
 
-# make barplot of neutral vs selected 
+# make barplot of neutral vs selected
 ns_neut_foldfreq <- table(ns.neut.merge$fold_bin)/sum(table(ns.neut.merge$fold_bin))
 ns_sel_foldfreq <- table(ns.sel.merge$fold_bin)/sum(table(ns.sel.merge$fold_bin))
 ns_all_foldfreq <- table(ns.all$fold_bin)/sum(table(ns.all$fold_bin))
@@ -501,7 +426,7 @@ bin <- c("0-0.05", "0.05-0.1", "0.1-0.15", "0.15-0.2", "0.2-0.25",
     "0.5-0.55", "0.55-0.6", "0.6-0.65", "0.65-0.7", "0.7-0.75",
     "0.75-0.8", "0.8-0.85", "0.85-0.9", "0.9-0.95", "0.95-1")
 
-# make barplot of neutral vs selected 
+# make barplot of neutral vs selected
 ns_neut_unfoldfreq <- table(ns.neut.merge$unfold_bin)/sum(table(ns.neut.merge$unfold_bin))
 ns_sel_unfoldfreq <- table(ns.sel.merge$unfold_bin)/sum(table(ns.sel.merge$unfold_bin))
 ns_all_unfoldfreq <- table(ns.all$unfold_bin)/sum(table(ns.all$unfold_bin))
@@ -639,4 +564,3 @@ legend("center", c("neutral", "selected", "Genome-wide: selected"),
     lty=c(1, 1, 2), col=c("blue", "red", "red"), lwd=2 )
 
 dev.off()
-
