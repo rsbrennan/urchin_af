@@ -1,4 +1,3 @@
-
 ## cmh.annotations.out contains spu assignments
 # ~/reference/ensembl_goterms.txt were downloaded on 2/18/18
 
@@ -110,27 +109,33 @@ for idx, go_line in enumerate(go_out):
 
 # also need to pull from ~/urchin_af/analysis/cmh.out.txt to get sig, etc.
 
-sig_out = np.empty(shape=(41494,4), dtype = object)
+sig_out = np.empty(shape=(41494,5), dtype = object)
 i=0 # start counter
 
-with open('/users/r/b/rbrennan/urchin_af/analysis/cmh.out.txt') as sig_file:
-    header_line = next(sig_file) # skip header row
-    for idx, sig_line in enumerate(sig_file):
-        tmp_snp = sig_line.split("\t")[0] + ":" + sig_line.split("\t")[1]
-        for go_line in go_out:
+for idx, go_line in enumerate(go_out):
+    tmp_chr = ""
+    tmp_pos = ""
+    tmp_pval = ""
+    tmp_sig = ""
+    tmp_snpnm = ""
+    with open('/users/r/b/rbrennan/urchin_af/analysis/cmh.out.txt') as sig_file:
+        header_line = next(sig_file) # skip header row
+        for sig_line in sig_file:
+            tmp_snp = sig_line.split("\t")[0]+ ":" + sig_line.split("\t")[1]
             if tmp_snp == go_line[0]:
                 tmp_chr = sig_line.split("\t")[0]
                 tmp_pos = sig_line.split("\t")[1]
-                tmp_pval = sig_line.split("\t")[74]
-                tmp_sig = sig_line.split("\t")[77].split("\n")[0]
-        out_1 = tmp_chr + "\t" + tmp_pos + "\t" + tmp_pval + "\t" + tmp_sig
-        sig_out[idx]= out_1.split("\t")
-        i=i+1
-        if i % 1000 == 0: print(i)
+                tmp_pval = sig_line.split("\t")[68]
+                tmp_sig = sig_line.split("\t")[71].split("\n")[0]
+                tmp_snpnm = sig_line.split("\t")[66]
+    out_1 = tmp_chr + "\t" + tmp_pos + "\t" + tmp_snpnm + "\t" + tmp_pval + "\t" + tmp_sig
+    sig_out[idx]= out_1.split("\t")
+    i=i+1
+    if i % 1000 == 0: print(i)
 
 # combine and save all
 out_1 = np.column_stack((sig_out, nm_out, go_out))
-head = "CHR" + "\t" + "POS" + "\t" + "PVAL"  + "\t" + "sig" + "\t" + "SPU_1" + "\t" + "description" + "\t" + "SNP"  "\t" + "SPU_2"  + "\t" + "short_name" + "\t" + "class" + "\t" + "GO_term"
+head = "CHR" + "\t" + "POS" + "\t" + "SNP_1" + "\t" + "PVAL"  + "\t" + "sig" + "\t" + "SPU_1" + "\t" + "description" + "\t" + "SNP_2"  "\t" + "SPU_2"  + "\t" + "short_name" + "\t" + "class" + "\t" + "GO_term"
 head = head.split("\t")
 out_final = np.vstack((head, out_1))
 np.savetxt('/users/r/b/rbrennan/urchin_af/analysis/cmh.master.out', out_final,fmt='%5s', delimiter='\t')
