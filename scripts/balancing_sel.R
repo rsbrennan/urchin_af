@@ -114,9 +114,15 @@ colnames(out_ann) <- c("SNP","Allele","Annotation","Annotation_Impact","Gene_Nam
 # read in cmh results so can identify sig changes:
 
 cmh <- read.table("~/urchin_af/analysis/cmh.out.txt", header=TRUE)
-
+cmh$SNP <- paste(cmh$CHROM, cmh$POS, sep=":")
 new <- as.data.frame(out_ann)
-new$sig <- cmh$pH_sig
+
+new$sig <- NA
+
+for(i in 1:nrow(new)){
+    new$sig[i] <- cmh$pH_sig[which(cmh$SNP == new$SNP[i])]
+}
+
 new$class <- c(NA) # also want to add in "class" ie, intergenic, etc
 
 new$class[which(new$Annotation == "downstream_gene_variant" |
@@ -225,7 +231,7 @@ chisq.test(din,correct=FALSE)
 
 
 
-####### 
+#######
 # write output
 
 write.table(file="~/urchin_af/analysis/cmh.annotations.out", new,
@@ -249,7 +255,7 @@ write.table(file="~/urchin_af/analysis/cmh.annotations.out", new,
 
 
 # read in allele frequency data
-mydata <- read.table("~/urchin_af/analysis/adaptive_allelefreq.txt", header=TRUE)
+mydata <- read.table("~/urchin_af/analysis/adaptive_allelefreq.txt", header=TRUE, stringsAsFactors=FALSE)
 mydata$SNP <- paste(mydata$CHROM, mydata$POS, sep=":")
 new.sel <- new[which(new$sig ==TRUE),]
 new.neut <- new[which(new$sig ==FALSE),]
@@ -260,20 +266,20 @@ mydata$folded_af = unlist(lapply(mydata$D1_8_mean,function(x)
 
 
 # ns variants
-ns.sel <- new.sel[which(new.sel$class == "non-synonymous",]
-ns.neut <- new.neut[which(new.neut$class == "non-synonymous",]
+ns.sel <- new.sel[which(new.sel$class == "non-synonymous"),]
+ns.neut <- new.neut[which(new.neut$class == "non-synonymous"),]
 
 # syn variants
-syn.sel <- new.sel[new.sel$class == "synonymous",]
-syn.neut <- new.neut[new.neut$class == "synonymous",]
+syn.sel <- new.sel[which(new.sel$class == "synonymous"),]
+syn.neut <- new.neut[which(new.neut$class == "synonymous"),]
 
 # introns
-intron.sel <- new.sel[new.sel$class == "intron",]
-intron.neut <- new.neut[new.neut$class == "intron",]
+intron.sel <- new.sel[which(new.sel$class == "intron"),]
+intron.neut <- new.neut[which(new.neut$class == "intron"),]
 
 #intergenic
-intergen.sel <- new.sel[new.sel$class == "intergenic",]
-intergen.neut <- new.neut[new.neut$class == "intergenic",]
+intergen.sel <- new.sel[which(new.sel$class == "intergenic"),]
+intergen.neut <- new.neut[which(new.neut$class == "intergenic"),]
 
 
 # unfolded allele freqs are col: af_out
@@ -388,6 +394,7 @@ a <- ggplot(data=ns.fq.dat, aes(x=bin, y=allele_frequency, fill=class, group=cla
 geom_bar(stat="identity", color="black", position=position_dodge())+
   theme_bw() + scale_fill_manual(values=c('royalblue4','tomato3', 'grey38'))+
   theme(axis.text.x = element_text(angle = 45, hjust = 1))+
+  ylab("relative frequency") +
   ggtitle("non-synonymous")+
   theme(legend.title=element_blank())
 
@@ -395,6 +402,7 @@ b <- ggplot(data=syn.fq.dat, aes(x=bin, y=allele_frequency, fill=class, group=cl
 geom_bar(stat="identity", color="black", position=position_dodge())+
   theme_bw() + scale_fill_manual(values=c('royalblue4','tomato3', 'grey38'))+
   theme(axis.text.x = element_text(angle = 45, hjust = 1))+
+  ylab("relative frequency") +
   ggtitle("synonymous")+
   theme(legend.title=element_blank())
 
@@ -402,6 +410,7 @@ c <- ggplot(data=intron.fq.dat, aes(x=bin, y=allele_frequency, fill=class, group
 geom_bar(stat="identity", color="black", position=position_dodge())+
   theme_bw() + scale_fill_manual(values=c('royalblue4','tomato3', 'grey38'))+
   theme(axis.text.x = element_text(angle = 45, hjust = 1))+
+  ylab("relative frequency") +
   ggtitle("intron")+
   theme(legend.title=element_blank())
 
@@ -409,6 +418,7 @@ d <- ggplot(data=intergen.fq.dat, aes(x=bin, y=allele_frequency, fill=class, gro
 geom_bar(stat="identity", color="black", position=position_dodge())+
   theme_bw() + scale_fill_manual(values=c('royalblue4','tomato3', 'grey38'))+
   theme(axis.text.x = element_text(angle = 45, hjust = 1))+
+  ylab("relative frequency") +
   ggtitle("intergenic")+
   theme(legend.title=element_blank())
 
@@ -482,21 +492,27 @@ a <- ggplot(data=ns.fq.dat, aes(x=bin, y=allele_frequency, fill=class, group=cla
 geom_bar(stat="identity", color="black", position=position_dodge())+
   theme_bw() + scale_fill_manual(values=c('royalblue4','tomato3', 'grey38'))+
   theme(axis.text.x = element_text(angle = 45, hjust = 1))+
+  ylim(0, 0.3) +
   ggtitle("non-synonymous")+
+  ylab("relative frequency") +
   theme(legend.title=element_blank())
 
 b <- ggplot(data=syn.fq.dat, aes(x=bin, y=allele_frequency, fill=class, group=class)) +
 geom_bar(stat="identity", color="black", position=position_dodge())+
   theme_bw() + scale_fill_manual(values=c('royalblue4','tomato3', 'grey38'))+
   theme(axis.text.x = element_text(angle = 45, hjust = 1))+
+  ylim(0, 0.3) +
   ggtitle("synonymous")+
+  ylab("relative frequency") +
   theme(legend.title=element_blank())
 
 c <- ggplot(data=intron.fq.dat, aes(x=bin, y=allele_frequency, fill=class, group=class)) +
 geom_bar(stat="identity", color="black", position=position_dodge())+
   theme_bw() + scale_fill_manual(values=c('royalblue4','tomato3', 'grey38'))+
   theme(axis.text.x = element_text(angle = 45, hjust = 1))+
+  ylim(0, 0.3) +
   ggtitle("intron")+
+  ylab("relative frequency") +
   theme(legend.title=element_blank())
 
 d <- ggplot(data=intergen.fq.dat, aes(x=bin, y=allele_frequency, fill=class, group=class)) +
@@ -504,6 +520,8 @@ geom_bar(stat="identity", color="black", position=position_dodge())+
   theme_bw() + scale_fill_manual(values=c('royalblue4','tomato3', 'grey38'))+
   theme(axis.text.x = element_text(angle = 45, hjust = 1))+
   ggtitle("intergenic")+
+  ylim(0, 0.3) +
+  ylab("relative frequency") +
   theme(legend.title=element_blank())
 
 png("~/urchin_af/figures/AF_categories_unfolded_bin.png", height=7, res=300, units="in", width=10)
@@ -564,3 +582,15 @@ legend("center", c("neutral", "selected", "Genome-wide: selected"),
     lty=c(1, 1, 2), col=c("blue", "red", "red"), lwd=2 )
 
 dev.off()
+
+
+### Some stats
+
+ks.test(syn.sel.merge$af_out, ns.sel.merge$af_out)
+
+xc=table(factor(ns.sel.merge$unfold_bin))      
+yc=table(factor(syn.sel.merge$unfold_bin))      
+cbind(xc,yc)                     
+chisq.test(cbind(xc,yc)) 
+
+

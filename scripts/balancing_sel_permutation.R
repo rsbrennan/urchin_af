@@ -68,8 +68,6 @@ for(i in 1:length(names(out.split))){
     dat[,paste(names(out.split)[i], "DP2", sep="_")] <- sapply(strsplit(ct[,4], ","), "[", 2)
 }
 
-#dep <-  dat[,grep("_DPtotal", colnames(dat), invert=TRUE)]
-
 #convert all to numeric
 dep <- data.frame(sapply(dat, function(x) as.numeric(as.character(x))))
 
@@ -102,10 +100,8 @@ for(i in 1:ncol(af)){
 # rm depth columns
 af.1 <-  af[,grep("_DPtotal", colnames(af), invert=TRUE)]
 
-
 # calculate mean of each group
 #### calc AF for each rep
-
 
 # calculate mean of each group
 gp <- c("D1_7", "D1_8", "D7_7", "D7_8")
