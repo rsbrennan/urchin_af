@@ -178,15 +178,22 @@ print("control cmh done")
 
 ######## append p values these to mydata ############
 
-mydata$control_selection_pval <- control_selection_pval
+control_selection_pval <- control_selection_pval
 mydata$pH_selection_pval <- pH_selection_pval
 mydata$d1_selection_pval <- d1_selection_pval
 mydata$d7_selection_pval <- d7_selection_pval
 
-cut_off <- quantile(mydata$control_selection_pval, 0.01, na.rm=TRUE)
+# convert to q value
+
+mydata$control_selection_qval <- qvalue(control_selection_pval)$qvalues
+mydata$pH_selection_qval <- qvalue(pH_selection_pval)$qvalues
+mydata$d1_selection_qval <- qvalue(d1_selection_pval)$qvalues
+mydata$d7_selection_qval <- qvalue(d7_selection_pval)$qvalues
+
+cut_off <- 0.01
 
 mydata$pH_sig <- FALSE
-mydata$pH_sig[which(mydata$pH_selection_pval < cut_off)] <- TRUE
+mydata$pH_sig[which(mydata$pH_selection_qval < cut_off)] <- TRUE
 
 ################ save output ########################
 
@@ -202,13 +209,12 @@ write.table(file="~/urchin_af/analysis/cmh.out.txt", mydata, col.names=TRUE, row
 # want an fdr of 0.01. 1%
 # use control p values. these are all false positives.
 
-cut_off <- quantile(mydata$control_selection_pval, 0.01, na.rm=TRUE)
-length(which(mydata$control_selection_pval < cut_off))
-length(which(mydata$pH_selection_pval < cut_off))
-length(which(mydata$d7_selection_pval < cut_off))
-length(which(mydata$d1_selection_pval < cut_off))
+length(which(mydata$control_selection_qval < cut_off))
+length(which(mydata$pH_selection_qval < cut_off))
+length(which(mydata$d7_selection_qval < cut_off))
+length(which(mydata$d1_selection_qval < cut_off))
 
-selected <- mydata[(which(mydata$pH_selection_pval < cut_off)),]
+selected <- mydata[(which(mydata$pH_selection_qval < cut_off)),]
 
 # write bedfile of cmh sig genes
 
@@ -225,5 +231,3 @@ nonselected <- mydata[(which(mydata$pH_selection_pval >= cut_off)),]
 write.table(file="~/urchin_af/analysis/cmh.neutral.bed",
         cbind(as.character(nonselected$CHROM), nonselected$POS-1, nonselected$POS),
         col.names=FALSE, row.names=FALSE, quote=FALSE,sep="\t")
-
-

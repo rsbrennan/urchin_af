@@ -17,8 +17,80 @@ else
   echo "cmh analysis failed"
   exit 1
 fi
-#sort cmh output:
-cat ~/urchin_af/analysis/cmh.out.txt | sort -k1,1 -k2,2n > ~/urchin_af/analysis/cmh.out.sorted.txt
+
+##############
+## snp eff
+#############
+# format data base
+cd ~/bin/snpEff/data/Strongylocentrotus_purpuratus
+zcat snpEffectPredictor.bin | grep -v 'EMSPUG' | gzip > snpEffectPredictor.bin1
+mv snpEffectPredictor.bin oldannotation
+mv snpEffectPredictor.bin1 snpEffectPredictor.bin
+
+# execute snp eff
+
+java -Xmx4g -jar ~/bin/snpEff/snpEff.jar -c ~/bin/snpEff/snpEff.config  -v Strongylocentrotus_purpuratus  ~/urchin_af/variants/urchin_final.vcf.gz  > ~/urchin_af/variants/urchin_ann.vcf > snpEff.stdout 2> snpEff.stderr
+
+wait
+
+# look at distribution of af, annotations, balancing selection with
+
+Rscript ~/urchin_af/scripts/balancing_sel.R 2> ~/urchin_af/log_out/balancing_sel.stderr_$(date +"%F_%R").txt 1> ~/urchin_af/log_out/balancing_sel.stdout_$(date +"%F_%R").txt
+
+########################
+#
+# go assignment
+#
+########################
+
+python  ~/urchin_af/scripts/snp_go_assign.py 2> ~/urchin_af/log_out/go_assign_stderr_$(date +"%F_%R").txt 1> ~/urchin_af/log_out/go_assign_stdout_$(date +"%F_%R").txt
+
+# outputs ~/urchin_af/analysis/cmh.master.out
+
+wait $!
+
+if [ $? -eq 0 ]
+then
+  echo "go assign successful"
+else
+  echo "go assign failed"
+  exit 1
+fi
+
+
+#######################
+#
+# go enrichment
+#
+#######################
+
+#format 1
+Rscript ~/urchin_af/scripts/go_format.R 2> ~/urchin_af/log_out/go_format_1.stderr_$(date +"%F_%R").txt 1> ~/urchin_af/log_out/go_format_1.stdout_$(date +"%F_%R").txt
+
+wait $!
+
+# format 2
+
+bash ~/urchin_af/scripts/go_format.sh 2> ~/urchin_af/log_out/go_format_2_stderr_$(date +"%F_%R").txt 1> ~/urchin_af/log_out/go_format_2.stdout_$(date +"%F_%R").txt
+
+wait $!
+
+# run enrichment:
+
+Rscript ~/urchin_af/scripts/go_enrich.R 2> ~/urchin_af/log_out/go_enrich.stderr_$(date +"%F_%R").txt 1> ~/urchin_af/log_out/go_enrich.stdout_$(date +"%F_%R").txt
+
+
+#
+
+
+
+
+
+
+
+
+
+
 
 # prep files for ldx
 # isolate each group for comparisons. get bam out. these should be around 15g total.
