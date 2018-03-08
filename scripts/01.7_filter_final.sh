@@ -2,7 +2,7 @@
 
 cd ~/urchin_af/variants/
 
-zcat ~/urchin_af/variants/urchin_filtered.vcf.gz | \
+zcat ~/urchin_af/variants/urchin_filt2.vcf.gz | \
     ~/bin/vcftools/bin/vcftools --vcf - \
     --positions ~/urchin_af/variants/keep.ontarget.txt \
     --recode -c | \

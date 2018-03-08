@@ -5,6 +5,96 @@ library(qvalue)
 library(scales)
 library(qqman)
 
+
+# obtain allele freqs:
+
+command1 <- "zcat ~/urchin_af/variants/urchin_final.vcf.gz | grep -v '^##' | cut -f 1-8 | sed 's/#CHROM/CHROM/g'"
+snp.info <- read.table(pipe(command1), header=TRUE)
+command2 <- "zcat ~/urchin_af/variants/urchin_final.vcf.gz | grep -v '^##' | cut -f 10-"
+snp <- read.table(pipe(command2), header=TRUE)
+
+colnames(snp) <- gsub("OASV2_DNA_", "", colnames(snp))
+colnames(snp) <- gsub("S_", "", colnames(snp))
+colnames(snp) <- gsub("5_", "", colnames(snp))
+colnames(snp) <- gsub("0_", "", colnames(snp))
+
+out.split <- apply(snp, 2, function(x) strsplit(x, ":"))
+
+dat <- data.frame(row.names=seq(from=1, to=nrow(snp),by= 1))
+
+# get depths
+for(i in 1:length(names(out.split))){
+    ct <- matrix(unlist(out.split[[i]]), ncol=4, byrow=TRUE)
+    #
+    dat[,paste(names(out.split)[i], "DPtotal", sep="_")] <- sapply(strsplit(ct[,3], ","), "[", 1)
+    dat[,paste(names(out.split)[i], "DP1", sep="_")] <- sapply(strsplit(ct[,4], ","), "[", 1)
+    dat[,paste(names(out.split)[i], "DP2", sep="_")] <- sapply(strsplit(ct[,4], ","), "[", 2)
+}
+
+#convert all to numeric
+dat <- data.frame(sapply(dat, function(x) as.numeric(as.character(x))))
+
+#### calc AF for each rep
+dep.keep <- dat
+
+# make empty data frame to hold af
+af <- data.frame(matrix(ncol=15, nrow=nrow(dep.keep)))
+pop <- unique(substr(colnames(dep),1,7))
+colnames(af) <- pop
+
+for(i in 1:ncol(af)){
+    # pull out DP1
+    dp1 <- as.numeric(dep.keep[,grep(paste(pop[i], "_DP1", sep=""), colnames(dep.keep))])
+    # total depth
+    dptot <- as.numeric(dep.keep[,grep(paste(pop[i], "_DPtotal", sep=""), colnames(dep.keep))])
+    #calc af
+    a.freq <- dp1/dptot
+    # add to af
+    af[,grep(paste(pop[i]), colnames(af))] <- a.freq
+    print(i)
+}
+
+colnames(af) <- paste(pop, "_af", sep="")
+
+# calculate mean of each group
+#### calc AF for each rep
+
+# calculate mean of each group
+gp <- c("D1_7", "D1_8", "D7_7", "D7_8")
+af.mean <-  data.frame(matrix(ncol=length(gp), nrow=nrow(dep.keep)))
+colnames(af.mean) <- gp
+
+for (i in 1:length(gp)){
+    sub.gp <- dep.keep[,grep(gp[i], colnames(dep.keep))]
+    #subset pops
+    pop <- unique(substr(colnames(sub.gp),1,7))
+    #make tmp matrix
+    tmp.out <-  data.frame(matrix(ncol=length(pop), nrow=nrow(dep.keep)))
+    colnames(tmp.out) <- pop
+    for (subpop in 1:length(pop)){
+        # pull out DP1
+        dp1 <- as.numeric(sub.gp[,grep(paste(pop[subpop], "_DP1", sep=""), colnames(sub.gp))])
+        # total depth
+        dptot <- as.numeric(sub.gp[,grep(paste(pop[subpop], "_DPtotal", sep=""), colnames(sub.gp))])
+        #calc af
+        a.freq <- dp1/dptot
+        tmp.out[,pop[subpop]] <- a.freq
+    }
+    af.mean[gp[i]] <- apply(tmp.out,1,mean)
+}
+colnames(af.mean) <- c("D1_7_mean", "D1_8_mean", "D7_7_mean", "D7_8_mean")
+
+# add snp info, etc to this.
+keep.info <- snp.info[,1:2]
+
+write.table(file="~/urchin_af/data/allele.freq.txt",cbind(keep.info, dep.keep, af, af.mean), 
+  row.names=FALSE, col.names=TRUE, quote=FALSE, sep="\t")
+
+
+######
+# actual af change analysis
+
+
 mydata <- read.table("~/urchin_af/data/allele.freq.txt", header=TRUE)
 
 ## subset data to only include af measures
@@ -178,7 +268,7 @@ print("control cmh done")
 
 ######## append p values these to mydata ############
 
-control_selection_pval <- control_selection_pval
+mydata$control_selection_pval <- control_selection_pval
 mydata$pH_selection_pval <- pH_selection_pval
 mydata$d1_selection_pval <- d1_selection_pval
 mydata$d7_selection_pval <- d7_selection_pval

@@ -13,11 +13,7 @@ library(ggplot2)
 library(qvalue)
 library(scales)
 
-cmh_dat <- read.table("~/urchin_af/analysis/cmh.out.txt", header=TRUE)
-
 mydata <- read.table("~/urchin_af/analysis/cmh.out.txt", header=TRUE)
-
-snp.info <- read.table("~/urchin_af/analysis/af.info.txt", header=TRUE)
 
 snp <- read.table(text= system("zcat ~/urchin_af/variants/urchin_final.vcf.gz | grep -v '^##' | cut -f 10-", intern=TRUE),
     header=TRUE)

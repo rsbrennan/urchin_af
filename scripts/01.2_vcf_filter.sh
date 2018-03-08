@@ -18,9 +18,11 @@ cd ~/urchin_af/variants/
         --max-missing .9 \
         --recode -c | \
         ~/bin/vcftools/bin/vcf-sort -c | \
-        bgzip >  ~/urchin_af/variants/urchin_dupsincl.vcf.gz
+        bgzip >  ~/urchin_af/variants/urchin_filt1.vcf.gz
 
-    tabix -p vcf ~/urchin_af/variants/urchin_dupsincl.vcf.gz
+    tabix -p vcf ~/urchin_af/variants/urchin_filt1.vcf.gz
 
+# pull out allele freq data
+zcat ~/urchin_af/variants/urchin_filt1.vcf.gz | grep -v '^##' | cut -f 1-8 | sed 's/#CHROM/CHROM/g' > ~/urchin_af/analysis/af.info.txt
 
-
+zcat ~/urchin_af/variants/urchin_filt1.vcf.gz | grep -v '^##' | cut -f 10- > ~/urchin_af/analysis/af.out.txt
