@@ -93,15 +93,15 @@ plot(0,type='n', xlim=c(0,300), ylim=c(0,0.4),
     xaxt="n",yaxt="n")
 
 lines(sort(dat.d1$distance, decreasing=FALSE), sort(fitted(mod.d1), decreasing=TRUE), lwd=3, lty=2, col='black')
-lines(sort(dat.d7_8_neut$distance, decreasing=FALSE), sort(fitted(mod.d7_8_neut), decreasing=TRUE), 
+lines(sort(dat.d7_8_neut$distance, decreasing=FALSE), sort(fitted(mod.d7_8_neut), decreasing=TRUE),
     lwd=3.2, lty=2, col='royalblue3')
-lines(sort(dat.d7_7_neut$distance, decreasing=FALSE), sort(fitted(mod.d7_7_neut), decreasing=TRUE), 
+lines(sort(dat.d7_7_neut$distance, decreasing=FALSE), sort(fitted(mod.d7_7_neut), decreasing=TRUE),
     lwd=3, lty=2, col='firebrick3')
 
 # selected sites
-#lines(sort(dat.d7_8_sel$distance, decreasing=FALSE), sort(fitted(mod.d7_8_sel), decreasing=TRUE), 
-#    lwd=3, col='royalblue3')
-lines(sort(dat.d7_7_sel$distance, decreasing=FALSE), sort(fitted(mod.d7_7_sel), decreasing=TRUE), 
+lines(sort(dat.d7_8_sel$distance, decreasing=FALSE), sort(fitted(mod.d7_8_sel), decreasing=TRUE),
+    lwd=3, col='royalblue3')
+lines(sort(dat.d7_7_sel$distance, decreasing=FALSE), sort(fitted(mod.d7_7_sel), decreasing=TRUE),
     lwd=3, col='firebrick3')
 
 axis(1, mgp=c(2, .5, 0), cex.axis=0.7) # second is tick mark labels
@@ -110,15 +110,16 @@ title(xlab="Distance between SNPs in base pairs", line=2, cex.lab=0.8)
 title(ylab="Estimated Linkage Disequilibrium", line=2, cex.lab=0.8)
 
 legend(90,0.4,
-    legend=c("pH 7.5 Day 7: selected",
+    legend=c(expression('T'[0]),
+            "pH 7.5 Day 7: selected",
             "pH 7.5 Day 7: neutral",
-            "pH 8.0 Day 7",
-            "pH 8.0 Day 1"),
-       col=c("firebrick3", "firebrick3", "royalblue3", "black"), lty=c(1,2,2,2), lwd=2.6, cex=0.8)
+            "pH 8.0 Day 7: selected",
+            "pH 8.0 Day 7: neutral"),
+       col=c("black", "firebrick3", "firebrick3", "royalblue3", "royalblue3"), lty=c(2,1,2,1,2), lwd=2.6, cex=0.8)
 
 mtext(text="A",
         side=3, line=0,
-             cex=1.5, 
+             cex=1.5,
             at=par("usr")[1]-0.14*diff(par("usr")[1:2]), outer=FALSE)
 
 ## sample random subgroups of data. compare to selected loci
@@ -165,20 +166,26 @@ for (i in 1:500){
     ks.val.ctr[i] <- ks.test(dat.d7_8_sel$mle_est, dat.perm$mle_est)$p.value
 }
 
-lines(sort(dat.d7_7_sel$distance, decreasing=FALSE), sort(fitted(mod.d7_7_sel), decreasing=TRUE), 
+lines(sort(dat.d7_7_sel$distance, decreasing=FALSE), sort(fitted(mod.d7_7_sel), decreasing=TRUE),
     lwd=3, col='firebrick3')
-lines(sort(dat.d7_7_neut$distance, decreasing=FALSE), sort(fitted(mod.d7_7_neut), decreasing=TRUE), 
+lines(sort(dat.d7_7_neut$distance, decreasing=FALSE), sort(fitted(mod.d7_7_neut), decreasing=TRUE),
     lwd=3, lty=2, col='firebrick3')
-#lines(sort(dat.d7_8_sel$distance, decreasing=FALSE), sort(fitted(mod.d7_8_sel), decreasing=TRUE), 
-#    lwd=3, col='royalblue3')
+lines(sort(dat.d7_7_neut$distance, decreasing=FALSE), sort(fitted(mod.d7_7_neut), decreasing=TRUE),
+    lwd=3, lty=2, col='firebrick3')
+lines(sort(dat.d7_8_sel$distance, decreasing=FALSE), sort(fitted(mod.d7_8_sel), decreasing=TRUE),
+    lwd=3, col='royalblue3')
 
 legend(90,0.4,
-    legend=c("pH 7.5 Day 7: selected","pH 7.5 Day 7: neutral", "Permuted samples"),
-       col=c("firebrick3", "firebrick3", "black"), lty=c(1,2,1), lwd=2.5, cex=0.8)
+    legend=c("Permuted",
+            "pH 7.5 Day 7: selected",
+            "pH 7.5 Day 7: neutral",
+            "pH 8.0 Day 7: selected",
+            "pH 8.0 Day 7: neutral"),
+       col=c("black", "firebrick3", "firebrick3", "royalblue3", "royalblue3"), lty=c(1,2,1,2,1), lwd=2.5, cex=0.8)
 
 mtext(text="B",
         side=3, line=0,
-             cex=1.5, 
+             cex=1.5,
             at=par("usr")[1]-0.14*diff(par("usr")[1:2]), outer=FALSE)
 
 dev.off()
@@ -190,7 +197,7 @@ dev.off()
 ##############################################################################
 
 #revert to all distances
-dat.d7_7 <- dat.d7_7.1 
+dat.d7_7 <- dat.d7_7.1
 dat.d7_8 <- dat.d7_8.1
 dat.d1 <- dat.d1.1
 
@@ -260,34 +267,31 @@ plot(0,type='n', xlim=c(0,500), ylim=c(0,0.5),
 
 for(i in 1:nrow(e)){
     points(x=as.numeric(as.character(e$bin1[i])), y=as.numeric(as.character(e$mle_est[i])),
-        col="black", bg=rgb(0,0,0,alpha=e$count.scale[i]), 
+        col="black", bg=rgb(0,0,0,alpha=e$count.scale[i]),
         pch=22, cex=1.1, lwd=1.5)
 }
 
 for(i in 1:nrow(b)){
     points(x=as.numeric(as.character(b$bin1[i])), y=as.numeric(as.character(b$mle_est[i])),
-        col=rgb(0.75,0,0,alpha=1), bg=rgb(0.75,0,0,alpha=b$count.scale[i]), 
+        col=rgb(0.75,0,0,alpha=1), bg=rgb(0.75,0,0,alpha=b$count.scale[i]),
         pch=21, cex=1.1, lwd=1.5)
 }
 
 for(i in 1:nrow(d)){
     points(x=as.numeric(as.character(d$bin1[i])), y=as.numeric(as.character(d$mle_est[i])),
-        col=rgb(0,0,0.75,alpha=1), bg=rgb(0,0,0.75,alpha=d$count.scale[i]), 
+        col=rgb(0,0,0.75,alpha=1), bg=rgb(0,0,0.75,alpha=d$count.scale[i]),
         pch=24, cex=1.1, lwd=1.5)
 }
 
 for(i in 1:nrow(a)){
     points(x=as.numeric(as.character(a$bin1[i])), y=as.numeric(as.character(a$mle_est[i])),
-        col=rgb(0.75,0,0,alpha=1), bg=rgb(0.75,0,0,alpha=a$count.scale[i]), 
+        col=rgb(0.75,0,0,alpha=1), bg=rgb(0.75,0,0,alpha=a$count.scale[i]),
         pch=25, cex=1.1, lwd=1.5)
 }
 
-legend(75,0.5,legend=c("pH day 7: selected","pH day 7: neutral", "Control day 7", "Control day 1"),
+legend(75,0.5,legend=c("pH 7.5 Day 7: selected","pH 7.5 Day 7: neutral", "pH 8.0 Day 7", expression('T'[0])),
        col=c("red", "red", "blue", "black"), pt.bg=c("red", "red", "blue", "black"),
         pch=c(25,21,24,22), cex=0.9)
-    
+
 
 dev.off()
-
-
-
