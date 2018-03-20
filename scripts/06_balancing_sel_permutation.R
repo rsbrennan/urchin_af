@@ -1,5 +1,4 @@
 
-
 library(dplyr)
 library(reshape)
 library(ggplot2)
@@ -8,22 +7,22 @@ library(scales)
 
 mydata <- read.table("~/urchin_af/analysis/adaptive_allelefreq.txt", stringsAsFactors=FALSE, header=TRUE)
 
+cut_off <- 0.01
 # need to pull out only selected alleles
-
-snp.sel <- mydata$af_out[which(mydata$pH_sig == TRUE)]
-snp.af_d7 <- mydata$af_d7[which(mydata$pH_sig == TRUE)]
-snp.ctr <- mydata$af_out[which(mydata$control_selection_qval < 0.01)]
+snp.sel_75 <- mydata$af_out[which(mydata$pH_selection_qval < cut_off & mydata$control_selection_qval >= cut_off)]
+snp.sel_80 <- mydata$af_out[which(mydata$control_selection_qval < cut_off & mydata$pH_selection_qval >= cut_off)]
+snp.sel_both <- mydata$af_out[which(mydata$control_selection_qval < cut_off & mydata$pH_selection_qval < cut_off)]
 
 png("~/urchin_af/figures/maf_unfolded_hist.png", res=300, height=7, width=7, units="in")
 par(mfrow = c(1, 1))
-hist(mydata$af_out, freq=FALSE, ylim=c(0,4.6), col=alpha("black", alpha = 0.6), breaks=50,
+hist(mydata$af_out, freq=FALSE, ylim=c(0,6), col=alpha("black", alpha = 0.6), breaks=50,
     main="Unfolded MAF", xlab="allele frequency")
-hist(snp.ctr, freq=FALSE, add=T, col=alpha("blue", alpha = 0.4), breaks=50)
-hist(snp.sel, freq=FALSE, add=T, col=alpha("red", alpha = 0.4), breaks=50)
+hist(snp.sel_80, freq=FALSE, add=T, col=alpha("royalblue3", alpha = 0.4), breaks=50)
+hist(snp.sel_75, freq=FALSE, add=T, col=alpha("firebrick3", alpha = 0.4), breaks=50)
+hist(snp.sel_both, freq=FALSE, add=T, col=alpha("darkorchid4", alpha = 0.4), breaks=50)
 legend("topright", c("D1 pH8- all", "D7 pH 8-selected", "D7 pH 7-selected"), pch=19, col=c("black", "blue", "red"), )
 dev.off()
 
-snp.final <- snp.sel
 
 
 ################################################
@@ -45,7 +44,6 @@ registerDoParallel(cl)
 clusterCall(cl, function() library(scales)) # need to load library for each node.
 clusterCall(cl, function() library(qvalue)) # need to load library for each node.
 
-
 #png("~/urchin_af/figures/maf_unfolded_permute.png", res=301, height=7, width=7, units="in")
 
 #plot(density(af_out), ylim=c(0,3), lwd=0,
@@ -58,7 +56,7 @@ comb <- function(...) {
   mapply('cbind', ..., SIMPLIFY=FALSE)
 }
 
-my_results_par <- foreach(perm_rep = 1:10, .combine='comb', .multicombine=TRUE,
+my_results_par <- foreach(perm_rep = 1:500, .combine='comb', .multicombine=TRUE,
                 .init=list(list(), list())) %dopar%
     {
 #    sink("~/monitor.txt",append=TRUE)
@@ -178,7 +176,7 @@ for (i in 1:nrow(af)) {
     }
 }
 
-cut_off <- quantile(control_selection_pval, 0.01, na.rm=TRUE)
+cut_off <- 0.01
 
 # need to pull out only selected alleles
 snp.sel <- af_out[which(control_selection_pval < cut_off)]
@@ -187,35 +185,36 @@ snp.sel <- af_out[which(control_selection_pval < cut_off)]
 
 # I think this might just add it to my_results_par
 
-list(ks.test(snp.final,snp.sel)$p.value, snp.sel)
+list(ks.test(snp.sel_80, snp.sel)$p.value, ks.test(snp.sel_75,snp.sel)$p.value, snp.sel)
 
 }
 
 
-write.table(my_results_par[[1]], file="~/urchin_af/analysis/permutation_pval.txt",  col.names=TRUE, quote=FALSE, sep="\t")
-write.table(my_results_par[[2]], file="~/urchin_af/analysis/permutation_af.txt",  col.names=TRUE, quote=FALSE, sep="\t")
+write.table(my_results_par[[1]], file="~/urchin_af/analysis/permutation_75_pval.txt",  col.names=TRUE, quote=FALSE, sep="\t")
+write.table(my_results_par[[2]], file="~/urchin_af/analysis/permutation_8_pval.txt",  col.names=TRUE, quote=FALSE, sep="\t")
+write.table(my_results_par[[3]], file="~/urchin_af/analysis/permutation_af.txt",  col.names=TRUE, quote=FALSE, sep="\t")
 
 #stop cluster
 stopCluster(cl)
 
-# 17/1000 > 0.05. 
+# 17/1000 > 0.05.
 
 
 png("~/urchin_af/figures/maf_unfolded_permute.png", res=301, height=7, width=7, units="in")
 
-plot(density(af_out), ylim=c(0,3), lwd=0,
+plot(density(0:1), ylim=c(0,3),xlim=c(0,1), lwd=0,
     main="", xlab="allele frequency")
 
-for (i in 1: ncol(my_results_par[[2]])){
-    lines(density(unlist(my_results_par[[2]][,i])), col=alpha("black", 0.1), lwd=1)
+for (i in 1: ncol(my_results_par[[3]])){
+    lines(density(unlist(my_results_par[[3]][,i])), col=alpha("black", 0.1), lwd=1)
 }
 
-lines(density(snp.final), col=alpha("red", 1), lwd=3)
+lines(density(snp.sel_75), col=alpha("firebrick3", 1), lwd=3)
+lines(density(snp.sel_80), col=alpha("royalblue3", 1), lwd=3)
 
-legend("topright", c("permuted", "D7 pH 7.5-selected"), pch=19, col=c("black", "red"))
+legend("topright", c("permuted", "D7 pH 7.5: selected", "D7 pH 8.0: selected"), 
+    pch=19, col=c("black", "firebrick3", "royalblue3"))
 
 dev.off()
 
-# look at proportion significant
 
-length(which(unlist(my_results_par[[1]]) < 0.05))
