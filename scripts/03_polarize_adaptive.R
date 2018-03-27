@@ -38,7 +38,7 @@ mydata.1 <- mydata[
 
 snp <- snp.1
 mydata <- mydata.1
-
+dat_snp <- paste(mydata$CHROM, mydata$POS, sep=":")
 out.split <- apply(snp, 2, function(x) strsplit(x, ":"))
 
 dat <- data.frame(row.names=seq(from=1, to=nrow(snp),by= 1))
@@ -79,7 +79,7 @@ for(i in 1:ncol(af)){
     af[,grep(paste(pop[i], "_DPtotal", sep=""), colnames(af))] <- dptot
 }
 
-# next, want to figure out which allele is increasing in frequency from D1_8 to D7_7
+# next, want to figure out which allele is increasing in frequency from D1_8 to D7
 
 # rm depth columns
 af.1 <-  af[,grep("_DPtotal", colnames(af), invert=TRUE)]
@@ -89,7 +89,7 @@ af.1 <-  af[,grep("_DPtotal", colnames(af), invert=TRUE)]
 
 # calculate mean of each group
 gp <- c("D1_8", "D7_7", "D7_8")
-af.mean <-  data.frame(matrix(ncol=8, nrow=nrow(af.1)))
+af.mean <-  data.frame(matrix(ncol=6, nrow=nrow(af.1)))
 nm1 <- paste(gp, "_DP1", sep="")
 nm2 <- paste(gp, "_DP2", sep="")
 nm3 <- c(nm1, nm2)
@@ -108,29 +108,60 @@ for (i in 1:length(gp)){
     af.mean[[paste(gp[i], "_DP2", sep="")]] <- dp2.mean
 }
 
+# figure out which are "adaptive". THat is, sig for either pH7 or pH8 or both. 
+#If neither, this is arbitrary assignment. use mean from both D7
+
+
 # next, want to figure out which allele is increasing in frequency from D1_8 to D7_7
 
-af1 <- af.mean$D7_7_DP1 - af.mean$D1_8_DP1
-af2 <- af.mean$D7_7_DP2 - af.mean$D1_8_DP2
+af1_7 <- af.mean$D7_7_DP1 - af.mean$D1_8_DP1
+af2_7 <- af.mean$D7_7_DP2 - af.mean$D1_8_DP2
+af1_8 <- af.mean$D7_8_DP1 - af.mean$D1_8_DP1
+af2_8 <- af.mean$D7_8_DP2 - af.mean$D1_8_DP2
+af1_both <- rowMeans(cbind(af1_7, af1_8))
 
 af_out <- rep(NA, nrow(af.mean))
-af_d7 <- rep(NA, nrow(af.mean))
 
-for (i in 1:nrow(af.1)) {
-    if(af1[i] > 0 ){
-        af_out[i] <- af.mean$D1_8_DP1[i]
-        af_d7[i] <- af.mean$D7_7_DP1[i]
+# mydata is in same order as af.mean. so can check sig cols. 
+
+for (i in 1:length(af_out)) {
+    if(mydata$pH7_sig[i] == TRUE & mydata$pH8_sig[i] == FALSE){
+        if(af1_7[i] > 0){
+            af_out[i] <- af.mean$D1_8_DP1[i]
+        }
+        else{
+            af_out[i] <- af.mean$D1_8_DP2[i]
+        }
+
     }
-    else{
-        af_out[i] <- af.mean$D1_8_DP2[i]
-        af_d7[i] <- af.mean$D7_7_DP2[i]
-
+    if(mydata$pH8_sig[i] == TRUE & mydata$pH7_sig[i] == FALSE){
+        if(af1_8[i] > 0){
+            af_out[i] <- af.mean$D1_8_DP1[i]
+        }
+        else{
+            af_out[i] <- af.mean$D1_8_DP2[i]
+        }
+    }
+    if(mydata$pH8_sig[i] == FALSE & mydata$pH7_sig[i] == FALSE){
+        if(af1_both[i] > 0){
+            af_out[i] <- af.mean$D1_8_DP1[i]
+        }
+        else{
+            af_out[i] <- af.mean$D1_8_DP2[i]
+        }
+    }
+    if(mydata$pH8_sig[i] == TRUE & mydata$pH7_sig[i] == TRUE){
+        if(af1_both[i] > 0){
+            af_out[i] <- af.mean$D1_8_DP1[i]
+        }
+        else{
+            af_out[i] <- af.mean$D1_8_DP2[i]
+        }
     }
 }
 
 
 # save adaptive allele table
 
-write.table(file="~/urchin_af/analysis/adaptive_allelefreq.txt", cbind(mydata, af_out,af_d7),
+write.table(file="~/urchin_af/analysis/adaptive_allelefreq.txt", cbind(mydata, af_out),
     col.name=TRUE, quote=FALSE, row.name=FALSE, sep= "\t" )
-
