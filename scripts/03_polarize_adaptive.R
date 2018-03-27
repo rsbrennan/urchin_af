@@ -88,7 +88,7 @@ af.1 <-  af[,grep("_DPtotal", colnames(af), invert=TRUE)]
 #### calc AF for each rep
 
 # calculate mean of each group
-gp <- c("D1_7", "D1_8", "D7_7", "D7_8")
+gp <- c("D1_8", "D7_7", "D7_8")
 af.mean <-  data.frame(matrix(ncol=8, nrow=nrow(af.1)))
 nm1 <- paste(gp, "_DP1", sep="")
 nm2 <- paste(gp, "_DP2", sep="")

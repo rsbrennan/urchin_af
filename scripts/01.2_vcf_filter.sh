@@ -14,8 +14,8 @@ cd ~/urchin_af/variants/
         --maf 0.01 \
         --minQ 20 \
         --min-alleles 2 --max-alleles 2 \
-        --remove-indels --min-meanDP 10 \
-        --max-missing .9 \
+        --remove-indels --minDP 40 --min-meanDP 50 \
+        --max-missing 1 \
         --recode -c | \
         ~/bin/vcftools/bin/vcf-sort -c | \
         bgzip >  ~/urchin_af/variants/urchin_filt1.vcf.gz

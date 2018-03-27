@@ -9,9 +9,9 @@ mydata <- read.table("~/urchin_af/analysis/adaptive_allelefreq.txt", stringsAsFa
 
 cut_off <- 0.01
 # need to pull out only selected alleles
-snp.sel_75 <- mydata$af_out[which(mydata$pH_selection_qval < cut_off & mydata$control_selection_qval >= cut_off)]
-snp.sel_80 <- mydata$af_out[which(mydata$control_selection_qval < cut_off & mydata$pH_selection_qval >= cut_off)]
-snp.sel_both <- mydata$af_out[which(mydata$control_selection_qval < cut_off & mydata$pH_selection_qval < cut_off)]
+snp.sel_75 <- mydata$af_out[which(mydata$pH7_selection_qval < cut_off & mydata$pH8_selection_qval >= cut_off)]
+snp.sel_80 <- mydata$af_out[which(mydata$pH8_selection_qval < cut_off & mydata$pH7_selection_qval >= cut_off)]
+snp.sel_both <- mydata$af_out[which(mydata$pH8_selection_qval < cut_off & mydata$pH7_selection_qval < cut_off)]
 
 png("~/urchin_af/figures/maf_unfolded_hist.png", res=300, height=7, width=7, units="in")
 par(mfrow = c(1, 1))

@@ -120,7 +120,7 @@ new <- as.data.frame(out_ann)
 new$sig <- NA
 
 for(i in 1:nrow(new)){
-    new$sig[i] <- cmh$pH_sig[which(cmh$SNP == new$SNP[i])]
+    new$sig[i] <- cmh$pH7_sig[which(cmh$SNP == new$SNP[i])]
 }
 
 new$class <- c(NA) # also want to add in "class" ie, intergenic, etc
