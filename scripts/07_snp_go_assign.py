@@ -19,7 +19,7 @@ go_path = '/users/r/b/rbrennan/reference/ensembl_goterms.txt'
 #spu_path = '/users/r/b/rbrennan/reference/whl22.v1.0.tmap.gz'
 
 #make empty array to save output
-go_out = np.empty(shape=(41494,5), dtype = object)
+go_out = np.empty(shape=(75368,5), dtype = object)
 
 i=0 # start counter
 # 41495 rows
@@ -72,7 +72,7 @@ with open('/users/r/b/rbrennan/urchin_af/analysis/cmh.annotations.out') as maste
                         if len(tmp_go) > 0:
                             tmp_go = tmp_go + ";" +  go_line.split("\t")[6]
         # pull out class
-        tmp_class = line.split("\t")[18].split("\n")[0]
+        tmp_class = line.split("\t")[19].split("\n")[0]
         tmp_short1 = tmp_short.split(";")
         tmp_short2 = ";".join(list(OrderedDict.fromkeys(tmp_short1)))
         tmp_go1 = tmp_go.split(";")
@@ -91,7 +91,7 @@ with open('/users/r/b/rbrennan/urchin_af/analysis/cmh.annotations.out') as maste
 # in column 8 of this table
 # spu in column 2
 
-nm_out = np.empty(shape=(41494,2), dtype = object)
+nm_out = np.empty(shape=(75368,2), dtype = object)
 i=0 # start counter
 
 for idx, go_line in enumerate(go_out):
@@ -109,7 +109,7 @@ for idx, go_line in enumerate(go_out):
 
 # also need to pull from ~/urchin_af/analysis/cmh.out.txt to get sig, etc.
 
-sig_out = np.empty(shape=(41494,5), dtype = object)
+sig_out = np.empty(shape=(75368,7), dtype = object)
 i=0 # start counter
 
 for idx, go_line in enumerate(go_out):
@@ -125,17 +125,19 @@ for idx, go_line in enumerate(go_out):
             if tmp_snp == go_line[0]:
                 tmp_chr = sig_line.split("\t")[0]
                 tmp_pos = sig_line.split("\t")[1]
-                tmp_pval = sig_line.split("\t")[71]
-                tmp_sig = sig_line.split("\t")[74].split("\n")[0]
-                tmp_snpnm = sig_line.split("\t")[66]
-    out_1 = tmp_chr + "\t" + tmp_pos + "\t" + tmp_snpnm + "\t" + tmp_pval + "\t" + tmp_sig
+                tmp_ph7_qval = sig_line.split("\t")[56]
+                tmp_ph8_qval = sig_line.split("\t")[55]
+                tmp_sig_ph7 = sig_line.split("\t")[57].split("\n")[0]
+                tmp_sig_ph8 = sig_line.split("\t")[58].split("\n")[0]
+                tmp_snpnm = tmp_chr + ":" + tmp_pos
+    out_1 = tmp_chr + "\t" + tmp_pos + "\t" + tmp_snpnm + "\t" + tmp_ph7_qval + "\t" + tmp_ph8_qval + "\t" +  tmp_sig_ph7 + "\t" + tmp_sig_ph8
     sig_out[idx]= out_1.split("\t")
     i=i+1
     if i % 1000 == 0: print(i)
 
 # combine and save all
 out_1 = np.column_stack((sig_out, nm_out, go_out))
-head = "CHR" + "\t" + "POS" + "\t" + "SNP_1" + "\t" + "PVAL"  + "\t" + "sig" + "\t" + "SPU_1" + "\t" + "description" + "\t" + "SNP_2"  "\t" + "SPU_2"  + "\t" + "short_name" + "\t" + "class" + "\t" + "GO_term"
+head = "CHR" + "\t" + "POS" + "\t" + "SNP_1" + "\t" + "qval_pH75" + "\t" + "qval_pH80" + "\t" + "sig_pH75"+ "\t" + "sig_pH80" + "\t" + "SPU_1" + "\t" + "description" + "\t" + "SNP_2"  "\t" + "SPU_2"  + "\t" + "short_name" + "\t" + "class" + "\t" + "GO_term"
 head = head.split("\t")
 out_final = np.vstack((head, out_1))
 np.savetxt('/users/r/b/rbrennan/urchin_af/analysis/cmh.master.out', out_final,fmt='%5s', delimiter='\t')
