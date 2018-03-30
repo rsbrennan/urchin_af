@@ -3,9 +3,9 @@ library(scales)
 mydata <- read.table("~/urchin_af/analysis/cmh.out.txt", header=TRUE)
 cut_off <- 0.01
 
-selected_7 <- mydata[which(mydata$pH_selection_qval < cut_off & mydata$control_selection_qval >= cut_off),]
-selected_8 <- mydata[which(mydata$control_selection_qval < cut_off & mydata$pH_selection_qval >= cut_off),]
-selected_both <- mydata[which(mydata$control_selection_qval < cut_off & mydata$pH_selection_qval < cut_off),]
+selected_7 <- mydata[which(mydata$pH7_selection_qval < cut_off & mydata$pH8_selection_qval >= cut_off),]
+selected_8 <- mydata[which(mydata$pH8_selection_qval < cut_off & mydata$pH7_selection_qval >= cut_off),]
+selected_both <- mydata[which(mydata$pH8_selection_qval < cut_off & mydata$pH7_selection_qval < cut_off),]
 
 selected_7_D7_8 <- selected_7[,grep("D7_8_mean", colnames(selected_7))]
 selected_7_D7_7 <- selected_7[,grep("D7_7_mean", colnames(selected_7))]
@@ -52,20 +52,23 @@ cor.test(d7_7_both, d7_8_both,
          method = "pearson",
          conf.level = 0.95)
 
-png("~/urchin_af/figures/Fig_06_afchangecomp.tiff", height=100, width=120, units="mm", res=300)
+png("~/urchin_af/figures/Fig_06_afchangecomp.png", height=100, width=120, units="mm", res=300)
 
 par(mar=c(3, 3, 1.7, 1), mgp=c(3, 1, 0), las=0)
 par(fig = c(0,1,0,1)) # this sets location of first plot
-plot(0,type='n', xlim=c(0,0.3), ylim=c(0,0.3),
+plot(0,type='n', xlim=c(0,.39), ylim=c(0,.39),
     main="",
     ylab="",
     xlab="",
     cex.lab=1.1, cex.axis=1,
     xaxt="n",yaxt="n")
 box(which="plot")
-points(x=d7_8_s7, y=d7_7_s7, pch=19, col = alpha("firebrick3", 0.5), cex=0.7)
-points(x=d7_8_s8, y=d7_7_s8, pch=19, col = alpha("royalblue3", 0.5), cex=0.7)
-points(x=d7_8_both, y=d7_7_both, pch=19, col = alpha("darkorchid4", 1), cex=0.7)
+points(x=d7_8_s7, y=d7_7_s7, pch=21, col=alpha("firebrick3", 0.2), 
+    bg = alpha("firebrick3", 0.2), cex=0.7)
+points(x=d7_8_s8, y=d7_7_s8, pch=21, col=alpha("royalblue3", 0.2), 
+    bg = alpha("royalblue3", 0.2), cex=0.7)
+points(x=d7_8_both, y=d7_7_both, pch=21, col=alpha("darkorchid4", 0.7),
+    bg = alpha("darkorchid4", 0.5), cex=0.7)
 
 abline(0, 1, col="black", lty=2, lwd=2.2)
 
@@ -74,10 +77,11 @@ axis(2, mgp=c(1.8, .4, 0), cex.axis=0.6, tcl=-0.2)
 title(ylab=expression(paste(Delta," allele frequency D7 pH 7.5")), line=1.5, cex.lab=0.7)
 title(xlab=expression(paste(Delta," allele frequency D7 pH 8.0")), line=1.5, cex.lab=0.7)
 
-legend("topleft", c("D7 pH 7.5 significant", 
+legend("topleft", c("D7 pH 7.5 significant",
                     "D7 pH 8.0 significant",
                     "Significant in both pH treatments"),
-    horiz = FALSE, inset = c(0, 0), pch = c(15, 15, 15), col = c("firebrick3", "royalblue3","darkorchid4"), pt.cex=0.7, cex=0.5)
+    horiz = FALSE, inset = c(0, 0), pch = c(15, 15, 15), 
+    col = c("firebrick3", "royalblue3","darkorchid4"), pt.cex=0.7, cex=0.5)
 
 dev.off()
 
