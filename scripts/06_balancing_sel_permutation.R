@@ -1,4 +1,6 @@
 
+## 06_balancing_sel_permutation.R
+
 library(dplyr)
 library(reshape)
 library(ggplot2)
@@ -39,7 +41,7 @@ library(doParallel)
 library(scales)
 #setup parallel backend to use many processors
 cores=detectCores()
-cl <- makeCluster(cores[1]-6) #not to overload your computer. This is setting up 10 different computing environments
+cl <- makeCluster(cores[1]-4) #not to overload your computer. This is setting up 10 different computing environments
 registerDoParallel(cl)
 clusterCall(cl, function() library(scales)) # need to load library for each node.
 clusterCall(cl, function() library(qvalue)) # need to load library for each node.
@@ -96,7 +98,7 @@ my_results_par <- foreach(perm_rep = 1:500, .combine='comb', .multicombine=TRUE,
         #ftable(Data.xtabs)
     }
 
-    # pull out sfs of sig results
+# pull out sfs of sig results
 
 cut_off <- 0.01
 out <- cbind(dp1.sub,dp2.sub )
@@ -162,41 +164,52 @@ af1 <- af.mean$D7_dp1 - af.mean$D1_dp1
 af2 <- af.mean$D7_dp2 - af.mean$D1_dp2
 
 af_out <- rep(NA, nrow(af.mean))
-af_d7 <- rep(NA, nrow(af.mean))
 
 for (i in 1:nrow(af)) {
     if(af1[i] > 0 ){
         af_out[i] <- af.mean$D1_dp1[i]
-        af_d7[i] <- af.mean$D7_dp1[i]
     }
     else{
         af_out[i] <- af.mean$D1_dp2[i]
-        af_d7[i] <- af.mean$D7_dp2[i]
 
     }
 }
 
-cut_off <- 0.01
+control_selection_qval <- qvalue(control_selection_pval)$qvalues
+control_selection_qval[which(is.na(control_selection_qval))] <- 1 # bc some are invariant
+cut_off <- quantile(control_selection_qval, 0.02)
 
 # need to pull out only selected alleles
-snp.sel <- af_out[which(control_selection_pval < cut_off)]
+snp.sel <- af_out[which(control_selection_qval < cut_off)]
 
-#lines(density(snp.sel), col=alpha("black", 0.15), lwd=1)
+# pad these with NA's so they're all the same legnth for the cbind
+#diff_len <- (6000-length(snp.sel_1))
+#snp.sel <- c(snp.sel_1, rep(NA,diff_len))
+
 
 # I think this might just add it to my_results_par
 
-list(ks.test(snp.sel_80, snp.sel)$p.value, ks.test(snp.sel_75,snp.sel)$p.value, snp.sel)
+list(ks.test(snp.sel_80, snp.sel)$p.value, 
+    ks.test(snp.sel_75,snp.sel)$p.value, 
+    ks.test(snp.sel_both,snp.sel)$p.value, 
+    snp.sel)
 
 }
 
 
-write.table(my_results_par[[1]], file="~/urchin_af/analysis/permutation_75_pval.txt",  col.names=TRUE, quote=FALSE, sep="\t")
-write.table(my_results_par[[2]], file="~/urchin_af/analysis/permutation_8_pval.txt",  col.names=TRUE, quote=FALSE, sep="\t")
-write.table(my_results_par[[3]], file="~/urchin_af/analysis/permutation_af.txt",  col.names=TRUE, quote=FALSE, sep="\t")
+write.table(my_results_par[[2]], file="~/urchin_af/analysis/permutation_75_pval.txt",  col.names=TRUE, quote=FALSE, sep="\t")
+write.table(my_results_par[[1]], file="~/urchin_af/analysis/permutation_8_pval.txt",  col.names=TRUE, quote=FALSE, sep="\t")
+write.table(my_results_par[[3]], file="~/urchin_af/analysis/permutation_both_pval.txt",  col.names=TRUE, quote=FALSE, sep="\t")
+write.table(my_results_par[[4]], file="~/urchin_af/analysis/permutation_af.txt",  col.names=TRUE, quote=FALSE, sep="\t")
 
 #stop cluster
 stopCluster(cl)
 
+length(which(my_results_par[[1]] < 0.05))
+length(which(my_results_par[[2]] < 0.05))
+length(which(my_results_par[[3]] < 0.05))
+
+#colSums(is.na(my_results_par[[4]]))
 # 17/1000 > 0.05.
 
 
@@ -205,16 +218,15 @@ png("~/urchin_af/figures/maf_unfolded_permute.png", res=301, height=7, width=7, 
 plot(density(0:1), ylim=c(0,3),xlim=c(0,1), lwd=0,
     main="", xlab="allele frequency")
 
-for (i in 1: ncol(my_results_par[[3]])){
-    lines(density(unlist(my_results_par[[3]][,i])), col=alpha("black", 0.1), lwd=1)
+for (i in 1: ncol(my_results_par[[4]])){
+    lines(density(unlist(my_results_par[[4]][,i]),na.rm=TRUE), col=alpha("black", 0.08), lwd=1)
 }
 
 lines(density(snp.sel_75), col=alpha("firebrick3", 1), lwd=3)
 lines(density(snp.sel_80), col=alpha("royalblue3", 1), lwd=3)
+lines(density(snp.sel_both), col=alpha("darkorchid2", 1), lwd=3)
 
-legend("topright", c("permuted", "D7 pH 7.5: selected", "D7 pH 8.0: selected"), 
-    pch=19, col=c("black", "firebrick3", "royalblue3"))
+legend("topright", c("permuted", "D7 pH 7.5: selected", "D7 pH 8.0: selected", "Overlapping selected"),
+    pch=19, col=c("black", "firebrick3", "royalblue3", "darkorchid2"))
 
 dev.off()
-
-

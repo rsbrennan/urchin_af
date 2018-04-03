@@ -22,20 +22,18 @@ ld.d7_8$id2 <- paste(ld.d7_8$chr, ld.d7_8$snp2, sep=":")
 #read in cmh results
 cmh <-read.table("~/urchin_af/analysis/cmh.out.txt", header=TRUE)
 
-cmh$selected <- FALSE
-cmh$ctr_sel<- FALSE
+cmh$sel_pH7 <- FALSE
+cmh$sel_pH8<- FALSE
 
 # thin to those that are showing response in treatment
-cmh$selected[which(cmh$pH_selection_qval < 0.01)] <- TRUE
-cmh$ctr_sel[which(cmh$control_selection_qval < 0.01)] <- TRUE
+cmh$sel_pH7[which(cmh$pH7_selection_qval < 0.001)] <- TRUE
 
-cmh$selected[which(cmh$control_selection_qval < 0.01)] <- FALSE
-cmh$ctr_sel[which(cmh$pH_selection_qval < 0.01)] <- FALSE
+cmh$sel_pH8[which(cmh$pH8_selection_qval < 0.001)] <- TRUE
 
 cmh$SNP <- paste(cmh$CHROM, cmh$POS, sep=":")
 
-selected <- data.frame( cmh$CHROM, cmh$POS, cmh$SNP, cmh$selected, cmh$ctr_sel )
-colnames(selected) <- c("chr", "pos", "id", "selected", "ctr_sel")
+selected <- data.frame( cmh$CHROM, cmh$POS, cmh$SNP, cmh$sel_pH7, cmh$sel_pH8 )
+colnames(selected) <- c("chr", "pos", "id", "sel_pH7", "sel_pH8")
 
 dat.d1 <- merge(ld.d1, selected, by.x="id1", by.y="id", all.x=TRUE)
 dat.d1 <- merge(dat.d1, selected, by.x="id2", by.y="id", all.x=TRUE)
@@ -61,15 +59,15 @@ dat.d1.1 <- dat.d1
 dat.d7_7.1 <- dat.d7_7
 dat.d7_8.1 <- dat.d7_8
 
-dat.d7_7 <- dat.d7_7[which(dat.d7_7$distance <=300),]
-dat.d7_8 <- dat.d7_8[which(dat.d7_8$distance <=300),]
-dat.d1 <- dat.d1[which(dat.d1$distance <=300),]
+dat.d7_7 <- dat.d7_7[which(dat.d7_7$distance <=200),]
+dat.d7_8 <- dat.d7_8[which(dat.d7_8$distance <=200),]
+dat.d1 <- dat.d1[which(dat.d1$distance <=200),]
 
-dat.d7_7_sel <- dat.d7_7[which(dat.d7_7$selected.y == TRUE | dat.d7_7$selected.x == TRUE),]
-dat.d7_7_neut <- dat.d7_7[which(dat.d7_7$selected.y == FALSE & dat.d7_7$selected.x == FALSE),]
+dat.d7_7_sel <- dat.d7_7[which(dat.d7_7$sel_pH7.y == TRUE | dat.d7_7$sel_pH7.x == TRUE),]
+dat.d7_7_neut <- dat.d7_7[which(dat.d7_7$sel_pH7.y == FALSE & dat.d7_7$sel_pH7.x == FALSE),]
 
-dat.d7_8_sel <- dat.d7_8[which(dat.d7_8$ctr_sel.y == TRUE | dat.d7_8$ctr_sel.x == TRUE),]
-dat.d7_8_neut <- dat.d7_8[which(dat.d7_8$ctr_sel.y == FALSE & dat.d7_8$ctr_sel.x == FALSE),]
+dat.d7_8_sel <- dat.d7_8[which(dat.d7_8$sel_pH8.y == TRUE | dat.d7_8$sel_pH8.x == TRUE),]
+dat.d7_8_neut <- dat.d7_8[which(dat.d7_8$sel_pH8.y == FALSE & dat.d7_8$sel_pH8.x == FALSE),]
 
 mod.d1 <- nls(mle_est ~ exp(a + b * distance), data = dat.d1, start = list(a = 0, b = 0))
 mod.d7_7 <- nls(mle_est ~ exp(a + b * distance), data = dat.d7_7, start = list(a = 0, b = 0))
@@ -85,7 +83,7 @@ tiff("~/urchin_af/figures/Fig_05_ld.tiff", height=100, width=200, units="mm", re
 par(mfrow = c(1, 2), mar=c(3, 3, 1.7, 1), mgp=c(3, 1, 0), las=0)
 
 
-plot(0,type='n', xlim=c(0,300), ylim=c(0,0.4),
+plot(0,type='n', xlim=c(0,200), ylim=c(0,0.4),
     main="",
     ylab="",
     xlab="",
@@ -115,7 +113,8 @@ legend(90,0.4,
             "pH 7.5 Day 7: neutral",
             "pH 8.0 Day 7: selected",
             "pH 8.0 Day 7: neutral"),
-       col=c("black", "firebrick3", "firebrick3", "royalblue3", "royalblue3"), lty=c(2,1,2,1,2), lwd=2.6, cex=0.8)
+       col=c("black", "firebrick3", "firebrick3", "royalblue3", "royalblue3"), 
+       lty=c(2,1,2,1,2), lwd=2.6, cex=0.6)
 
 mtext(text="A",
         side=3, line=0,
@@ -124,7 +123,7 @@ mtext(text="A",
 
 ## sample random subgroups of data. compare to selected loci
 
-plot(0,type='n', xlim=c(0,300), ylim=c(0,0.4),
+plot(0,type='n', xlim=c(0,200), ylim=c(0,0.4),
     main="",
     ylab="",
     xlab="",
@@ -134,10 +133,8 @@ axis(1, mgp=c(2, .5, 0), cex.axis=0.7) # second is tick mark labels
 axis(2, mgp=c(2, .5, 0), cex.axis=0.7)
 title(xlab="Distance between SNPs in base pairs", line=2, cex.lab=0.8)
 
-perm_length <- length(which(cmh$selected == TRUE))
+perm_length <- length(which(cmh$sel_pH7 == TRUE))
 
-a <- c()
-b <- c()
 ks.val.sel <- c()
 ks.mod.sel <- c()
 ks.val.ctr <- c()
@@ -151,29 +148,29 @@ for (i in 1:500){
     dat.perm <- merge(ld.d7_7, selected.perm, by.x="id1", by.y="id", all.x=TRUE)
     dat.perm <- merge(dat.perm, selected.perm, by.x="id2", by.y="id", all.x=TRUE)
     dat.perm$distance <- abs(dat.perm$snp1-dat.perm$snp2)
-    dat.perm <- dat.perm[which(dat.perm$distance <=300),]
+    dat.perm <- dat.perm[which(dat.perm$distance <=200),]
     dat.perm <- dat.perm[which(dat.perm$selected.y == TRUE | dat.perm$selected.x == TRUE),]
     mod.perm <- nls(mle_est ~ exp(a + b * distance), data = dat.perm, start = list(a = 0, b = 0))
     lines(sort(dat.perm$distance, decreasing=FALSE),
         sort(fitted(mod.perm), decreasing=TRUE),
-        lwd=1, col=rgb(0,0,0,alpha=0.2))
-   if (i%%10 == 0){print(i)} # printing progress
-    a[i] <- coef(mod.perm)["a"]
-    b[i] <- coef(mod.perm)["b"]
+        lwd=1, col=rgb(0,0,0,alpha=0.1))
+   if (i%%25 == 0){print(i)} # printing progress
     ks.mod.sel[i] <- ks.test(fitted(mod.d7_7_sel), fitted(mod.perm))$p.value
     ks.val.sel[i] <- ks.test(dat.d7_7_sel$mle_est, dat.perm$mle_est)$p.value
     ks.mod.ctr[i] <- ks.test(fitted(mod.d7_8_sel), fitted(mod.perm))$p.value
     ks.val.ctr[i] <- ks.test(dat.d7_8_sel$mle_est, dat.perm$mle_est)$p.value
 }
 
-lines(sort(dat.d7_7_sel$distance, decreasing=FALSE), sort(fitted(mod.d7_7_sel), decreasing=TRUE),
-    lwd=3, col='firebrick3')
+
 lines(sort(dat.d7_7_neut$distance, decreasing=FALSE), sort(fitted(mod.d7_7_neut), decreasing=TRUE),
-    lwd=3, lty=2, col='firebrick3')
-lines(sort(dat.d7_7_neut$distance, decreasing=FALSE), sort(fitted(mod.d7_7_neut), decreasing=TRUE),
-    lwd=3, lty=2, col='firebrick3')
+    lwd=3.1, lty=2, col='firebrick3')
+lines(sort(dat.d7_8_neut$distance, decreasing=FALSE), sort(fitted(mod.d7_8_neut), decreasing=TRUE),
+    lwd=2.9, lty=2, col='royalblue3')
 lines(sort(dat.d7_8_sel$distance, decreasing=FALSE), sort(fitted(mod.d7_8_sel), decreasing=TRUE),
     lwd=3, col='royalblue3')
+lines(sort(dat.d7_7_sel$distance, decreasing=FALSE), sort(fitted(mod.d7_7_sel), decreasing=TRUE),
+    lwd=3, col='firebrick3')
+
 
 legend(90,0.4,
     legend=c("Permuted",
@@ -181,7 +178,8 @@ legend(90,0.4,
             "pH 7.5 Day 7: neutral",
             "pH 8.0 Day 7: selected",
             "pH 8.0 Day 7: neutral"),
-       col=c("black", "firebrick3", "firebrick3", "royalblue3", "royalblue3"), lty=c(1,2,1,2,1), lwd=2.5, cex=0.8)
+       col=c("black", "firebrick3", "firebrick3", "royalblue3", "royalblue3"), 
+       lty=c(1,2,1,2,1), lwd=2.5, cex=0.6)
 
 mtext(text="B",
         side=3, line=0,
@@ -189,6 +187,11 @@ mtext(text="B",
             at=par("usr")[1]-0.14*diff(par("usr")[1:2]), outer=FALSE)
 
 dev.off()
+
+length(which(ks.val.sel < 0.05)) 
+length(which(ks.mod.sel < 0.05))
+length(which(ks.val.ctr < 0.05))
+length(which(ks.mod.ctr < 0.05))
 
 
 
@@ -201,11 +204,11 @@ dat.d7_7 <- dat.d7_7.1
 dat.d7_8 <- dat.d7_8.1
 dat.d1 <- dat.d1.1
 
-dat.d7_7_sel <- dat.d7_7[which(dat.d7_7$selected.y == TRUE | dat.d7_7$selected.x == TRUE),]
-dat.d7_7_neut <- dat.d7_7[which(dat.d7_7$selected.y == FALSE & dat.d7_7$selected.x == FALSE),]
+dat.d7_7_sel <- dat.d7_7[which(dat.d7_7$sel_pH7.y == TRUE | dat.d7_7$sel_pH7.x == TRUE),]
+dat.d7_7_neut <- dat.d7_7[which(dat.d7_7$sel_pH7.y == FALSE & dat.d7_7$sel_pH7.x == FALSE),]
 
-dat.d7_8_sel <- dat.d7_8[which(dat.d7_8$ctr_sel.y == TRUE | dat.d7_8$ctr_sel.x == TRUE),]
-dat.d7_8_neut <- dat.d7_8[which(dat.d7_8$ctr_sel.y == FALSE & dat.d7_8$ctr_sel.x == FALSE),]
+dat.d7_8_sel <- dat.d7_8[which(dat.d7_8$sel_pH8.y == TRUE | dat.d7_8$sel_pH8.x == TRUE),]
+dat.d7_8_neut <- dat.d7_8[which(dat.d7_8$sel_pH8.y == FALSE & dat.d7_8$sel_pH8.x == FALSE),]
 
 dat.d7_7_sel$bin <- cut(dat.d7_7_sel$distance, breaks=seq(from=0,to=500, by=10))
 dat.d7_7_sel$bin1 <- gsub( '\\(', "", sapply(strsplit(as.character(dat.d7_7_sel$bin),","), '[', 1))
@@ -234,7 +237,7 @@ c <- data.frame(bin1=c$bin1, mle_est=c$mle_est, count= c.ct$mle_est)
 
 d <- aggregate(mle_est ~ bin1 , data=dat.d7_8_neut, mean)
 d.ct <- aggregate(mle_est ~ bin1 , data=dat.d7_8_neut, length)
-d <- data.frame(bin1=a$bin1, mle_est=d$mle_est, count= d.ct$mle_est)
+d <- data.frame(bin1=d$bin1, mle_est=d$mle_est, count= d.ct$mle_est)
 
 e <- aggregate(mle_est ~ bin1 , data=dat.d1, mean)
 e.ct <- aggregate(mle_est ~ bin1 , data=dat.d1, length)
@@ -258,7 +261,7 @@ c$count.scale <- range01(log10(c$count))
 d$count.scale <- range01(log10(d$count))
 e$count.scale <- range01(log10(e$count))
 
-tiff("~/urchin_af/figures/Fig_S01_ldbinned.tiff", res=300, height=4, width=7, units="in")
+png("~/urchin_af/figures/Fig_S01_ldbinned.png", res=300, height=4, width=7, units="in")
 par(mfrow = c(1, 1),mar=c(4.5, 4.5, 0.5, 0.5))
 
 plot(0,type='n', xlim=c(0,500), ylim=c(0,0.5),
@@ -280,6 +283,12 @@ for(i in 1:nrow(b)){
 for(i in 1:nrow(d)){
     points(x=as.numeric(as.character(d$bin1[i])), y=as.numeric(as.character(d$mle_est[i])),
         col=rgb(0,0,0.75,alpha=1), bg=rgb(0,0,0.75,alpha=d$count.scale[i]),
+        pch=22, cex=1.1, lwd=1.5)
+}
+
+for(i in 1:nrow(c)){
+    points(x=as.numeric(as.character(c$bin1[i])), y=as.numeric(as.character(c$mle_est[i])),
+        col=rgb(0,0,0.75,alpha=1), bg=rgb(0,0,0.75,alpha=c$count.scale[i]),
         pch=24, cex=1.1, lwd=1.5)
 }
 
@@ -289,9 +298,11 @@ for(i in 1:nrow(a)){
         pch=25, cex=1.1, lwd=1.5)
 }
 
-legend(75,0.5,legend=c("pH 7.5 Day 7: selected","pH 7.5 Day 7: neutral", "pH 8.0 Day 7", expression('T'[0])),
-       col=c("red", "red", "blue", "black"), pt.bg=c("red", "red", "blue", "black"),
-        pch=c(25,21,24,22), cex=0.9)
+legend(75,0.5,legend=c("pH 7.5 Day 7: selected","pH 7.5 Day 7: neutral", 
+    "pH 8.0 Day 7: selected", "pH 8.0 Day 7: neutral", expression('T'[0])),
+       col=c("red", "red", "blue","blue", "black"), pt.bg=c("red", "red", "blue","blue", "black"),
+        pch=c(25,21,24,22,22), cex=0.9)
 
 
 dev.off()
+

@@ -1,5 +1,4 @@
 
-
 for snp_set in master genic exon intron intergenic non_coding; do
 
     #these are all temporary and can be written over and removed
@@ -18,7 +17,8 @@ for snp_set in master genic exon intron intergenic non_coding; do
         > ~/urchin_af/analysis/go_enrichment/pval.out
 
     # make go annotation with no header
-    paste ~/urchin_af/analysis/go_enrichment/snp.out ~/urchin_af/analysis/go_enrichment/cmh.pH75_${snp_set}_GO.out \
+
+    paste ~/urchin_af/analysis/go_enrichment/snp.out ~/urchin_af/analysis/go_enrichment/GO.out \
         > ~/urchin_af/analysis/go_enrichment/GO.pH75_${snp_set}.annotation
 
     # make significance tables with headers
@@ -33,8 +33,7 @@ for snp_set in master genic exon intron intergenic non_coding; do
          tr -d " \t  "  > ~/urchin_af/analysis/go_enrichment/pval.pH75.${snp_set}.table
 
     # change for topGO format, need to be comma delimted
-    cat ~/urchin_af/analysis/go_enrichment/GO.${snp_set}.annotation | sed 's/;/,/g' | \
-        grep -v 'unknown' > ~/urchin_af/analysis/go_enrichment/topGO.pH75.${snp_set}.annotation
+    cat ~/urchin_af/analysis/go_enrichment/GO.pH75_${snp_set}.annotation | sed 's/;/,/g'  > ~/urchin_af/analysis/go_enrichment/topGO.pH75.${snp_set}.annotation
 
 done
 
@@ -57,7 +56,7 @@ for snp_set in master genic exon intron intergenic non_coding; do
         > ~/urchin_af/analysis/go_enrichment/pval.out
 
     # make go annotation with no header
-    paste ~/urchin_af/analysis/go_enrichment/snp.out ~/urchin_af/analysis/go_enrichment/cmh.pH80_${snp_set}_GO.out \
+    paste ~/urchin_af/analysis/go_enrichment/snp.out ~/urchin_af/analysis/go_enrichment/GO.out \
         > ~/urchin_af/analysis/go_enrichment/GO.pH80_${snp_set}.annotation
 
     # make significance tables with headers
@@ -72,8 +71,7 @@ for snp_set in master genic exon intron intergenic non_coding; do
          tr -d " \t  "  > ~/urchin_af/analysis/go_enrichment/pval.pH80.${snp_set}.table
 
     # change for topGO format, need to be comma delimted
-    cat ~/urchin_af/analysis/go_enrichment/GO.${snp_set}.annotation | sed 's/;/,/g' | \
-        grep -v 'unknown' > ~/urchin_af/analysis/go_enrichment/topGO.pH80.${snp_set}.annotation
+    cat ~/urchin_af/analysis/go_enrichment/GO.pH80_${snp_set}.annotation | sed 's/;/,/g'  > ~/urchin_af/analysis/go_enrichment/topGO.pH80.${snp_set}.annotation
 
 done
 
@@ -110,7 +108,7 @@ for snp_set in master; do
          tr -d " \t  "  > ~/urchin_af/analysis/go_enrichment/pval.overlap.${snp_set}.table
 
     # change for topGO format, need to be comma delimted
-    cat ~/urchin_af/analysis/go_enrichment/GO.overlap_${snp_set}.annotation | sed 's/;/,/g' | \
+    cat ~/urchin_af/analysis/go_enrichment/GO.overlap_${snp_set}.annotation | sed 's/;/,/g'  \
          > ~/urchin_af/analysis/go_enrichment/topGO.overlap.${snp_set}.annotation
 
 done

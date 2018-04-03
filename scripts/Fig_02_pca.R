@@ -4,11 +4,10 @@ library(dplyr)
 mydata <- read.table("~/urchin_af/analysis/cmh.out.txt", header=TRUE)
 
 dat <- mydata[,grep("_af", colnames(mydata))]
-dat <- dat[,grep("D1_7", colnames(dat), invert=TRUE)]
 dat_t <- t(dat)
 
 filename <- read.pcadapt(dat_t,type="pool",local.env = TRUE,pop.sizes = rep(50, nrow(dat_t)))
-x <- pcadapt(filename,K=11) # calc actual pca
+x <- pcadapt(filename,K=5) # calc actual pca
 
 # pop names
 poplist.int <- c(rep(1,50),rep(2,50),rep(3,50))
@@ -40,7 +39,7 @@ pc_sum <- as.data.frame(cbind(pc1, pc2))
 pc_sum$pH_day <- paste(substr(as.character(pc_sum$num), 4,4),substr(as.character(pc_sum$num), 1,2), sep="_")
 
 # jitter D7 ph8 point so we can see
-pc_sum$PC1[10] <- (pc_sum$PC1[10]+ pc_sum$PC1[10]*.7)
+pc_sum$PC1[10] <- (pc_sum$PC1[10]- pc_sum$PC1[10])
 
 # flip each pc
 pc_sum$PC1 <- pc_sum$PC1*(-1)
@@ -58,7 +57,7 @@ x$singular.values[2]/sum(x$singular.values)*100
 
 
 sp <- c(24,21,22)
-bg.col <-  c("firebrick3", "black","royalblue3")
+bg.col <-  c("firebrick3", "gray48","royalblue3")
 
 tiff("~/urchin_af/figures/Fig_03_pca.tiff", res=300, height=85, width=85, units="mm")
 
@@ -71,19 +70,19 @@ plot(y=pc_sum$PC2, x=pc_sum$PC1,
     ylab="",
     xlab="",
     cex.lab=1.1, cex.axis=1,
-    ylim=c(-0.08, 0.11),
-    xlim=c(-0.086, 0.12),
+    ylim=c(-0.085, 0.11),
+    xlim=c(-0.086, 0.125),
     xaxt="n",yaxt="n"
 )
 
 axis(1, mgp=c(2, .5, 0), cex.axis=0.7) # second is tick mark labels
 axis(2, mgp=c(2, .5, 0), cex.axis=0.7)
 
-title(xlab="PC1: 11.1%", line=2, cex.lab=1.05)
-title(ylab="PC2: 10.4%", line=2, cex.lab=1.05)
+title(xlab="PC1: 22.0%", line=2, cex.lab=1.05)
+title(ylab="PC2: 20.7%", line=2, cex.lab=1.05)
 
-legend("topleft", pch=c(21,22,24),
-    pt.bg=c("black", "royalblue3", "firebrick3") ,
+legend("topright", pch=c(21,22,24),
+    pt.bg=c("gray31", "royalblue3", "firebrick3") ,
     legend=c(expression('T'[0]), "Day 7 pH 8.0", "Day 7 pH 7.5" ),
     pt.cex=1.6, cex=0.85)
 
