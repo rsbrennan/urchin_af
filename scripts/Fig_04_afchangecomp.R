@@ -1,7 +1,7 @@
 library(scales)
 
 mydata <- read.table("~/urchin_af/analysis/cmh.out.txt", header=TRUE)
-cut_off <- 0.01
+cut_off <- 0.001
 
 selected_7 <- mydata[which(mydata$pH7_selection_qval < cut_off & mydata$pH8_selection_qval >= cut_off),]
 selected_8 <- mydata[which(mydata$pH8_selection_qval < cut_off & mydata$pH7_selection_qval >= cut_off),]
@@ -63,118 +63,24 @@ plot(0,type='n', xlim=c(0,.39), ylim=c(0,.39),
     cex.lab=1.1, cex.axis=1,
     xaxt="n",yaxt="n")
 box(which="plot")
-points(x=d7_8_s7, y=d7_7_s7, pch=21, col=alpha("firebrick3", 0.2), 
-    bg = alpha("firebrick3", 0.2), cex=0.7)
-points(x=d7_8_s8, y=d7_7_s8, pch=21, col=alpha("royalblue3", 0.2), 
-    bg = alpha("royalblue3", 0.2), cex=0.7)
+points(x=d7_8_s7, y=d7_7_s7, pch=21, col=alpha("firebrick3", 0.2),
+    bg = alpha("firebrick3", 0.2), cex=0.8)
+points(x=d7_8_s8, y=d7_7_s8, pch=21, col=alpha("royalblue3", 0.2),
+    bg = alpha("royalblue3", 0.2), cex=0.8)
 points(x=d7_8_both, y=d7_7_both, pch=21, col=alpha("darkorchid4", 0.7),
-    bg = alpha("darkorchid4", 0.5), cex=0.7)
+    bg = alpha("darkorchid4", 0.7), cex=0.8)
 
 abline(0, 1, col="black", lty=2, lwd=2.2)
 
 axis(1, mgp=c(1.8, .2, 0), cex.axis=0.6,tcl=-0.2) # second is tick mark labels
 axis(2, mgp=c(1.8, .4, 0), cex.axis=0.6, tcl=-0.2)
-title(ylab=expression(paste(Delta," allele frequency D7 pH 7.5")), line=1.5, cex.lab=0.7)
-title(xlab=expression(paste(Delta," allele frequency D7 pH 8.0")), line=1.5, cex.lab=0.7)
+title(ylab=expression(paste(Delta," allele frequency pH 7.5")), line=1.5, cex.lab=0.7)
+title(xlab=expression(paste(Delta," allele frequency pH 8.0")), line=1.5, cex.lab=0.7)
 
-legend("topleft", c("D7 pH 7.5 significant",
-                    "D7 pH 8.0 significant",
-                    "Significant in both pH treatments"),
-    horiz = FALSE, inset = c(0, 0), pch = c(15, 15, 15), 
-    col = c("firebrick3", "royalblue3","darkorchid4"), pt.cex=0.7, cex=0.5)
-
-dev.off()
-
-#legend("topleft", c("1:1", "Observed"), xpd = TRUE,
-#   horiz = FALSE, inset = c(0, 0),
-#   lty = c(2, 1), col = c("firebrick3", "firebrick3"), lwd=1.8, cex=0.6)
-
-# add rectangle around inset fig
-rect(xleft=0.25, xright=0.445, ybottom=-0.1, ytop=0.16)
-
-# add inset histogram
-par(fig = c(0.46,.98, 0.065, 0.58), new = T)  # location of 2nd plot. fist 2 nums are x locaiton, 2nd are y loc
-
-hist(d1_d1,  col = alpha("black", 0.5), freq=FALSE,
-    ylab="", xlab="",
-    xaxt="n",yaxt="n",
-    main="",
-    xlim=c(0,.3))
-hist(d1_d7,  col = alpha("firebrick3", 0.5), freq=FALSE, add=T)
-axis(1, mgp=c(0.5, - 0.25, 0), cex.axis=0.5, tcl=-0.2) # second is tick mark labels
-axis(2, mgp=c(0.5, 0.09, 0), cex.axis=0.5, tcl=-0.2)
-
-title(ylab="Density", cex.lab=0.7, line=0.55, cex.lab=0.5)
-title(xlab="Avg. change in allele frequency", line=0.3, cex.lab=0.5)
-legend("topright", c("D1 pH 8.0 vs. D1 pH 7.5", "D1 pH 8.0 vs. D7 pH 7.5"),
-    horiz = FALSE, inset = c(0, 0),
-    bty = "n", pch = c(15, 15), col = c("black", "firebrick3"), pt.cex=0.7, cex=0.5)
-
-
-# add legend. basically overlaying new empty plot
-#par(fig = c(0.13, 1, 0, 1), oma = c(0, 0, .15, 0), mar = c(0, 0, 0, 0), new = TRUE)
-#plot(0, 0, type = "n", bty = "n", xaxt = "n", yaxt = "n")
-#legend("topleft", c("1:1", "Observed"), xpd = TRUE,
-#   horiz = FALSE, inset = c(0, 0),
-#   bty = "n", lty = c(2, 1), col = c("red", "red"), lwd=1.8, cex=0.6)
-
-#text(x=0.5, y=.95, paste("y = ",round(coef(reg1)[2], 2), "x", " + ", round(coef(reg1)[1], 2), sep=""), cex=0.7, xpd = TRUE)
-#text(x=-0.1, y=.95, paste("R-squared:", round(summary(reg1)$adj.r.squared, 2)), cex=0.7)
-
-dev.off()
-
-
-
-########
-# separate plots, for presentation fig
-########
-
-
-pdf("~/urchin_af/figures/Fig_06_1.pdf", height=5, width=5)
-
-par(mfrow=c(1,1))
-
-par(mar=c(5, 5, 1.7, 1), mgp=c(3, 1, 0), las=0)
-plot(0,type='n', xlim=c(0,0.3), ylim=c(0,0.3),
-    main="",
-    ylab="",
-    xlab="",
-    cex.lab=1.1, cex.axis=1,
-    xaxt="n",yaxt="n")
-box(which="plot")
-points(x=d1_d1, y=d1_d7, pch=19, col = alpha("black", 0.5), cex=1)
-#abline(reg1, col="firebrick3", lwd=2)
-abline(0, 1, col="firebrick3", lty=2, lwd=2)
-
-axis(1, mgp=c(1.8, .2, 0), cex.axis=0.8,tcl=-0.2) # second is tick mark labels
-axis(2, mgp=c(1.8, .4, 0), cex.axis=0.8, tcl=-0.2)
-title(ylab=expression(paste(Delta," allele frequency: ", "D1 pH 8.0 vs. D7 pH 7.5")), line=2.3, cex.lab=1)
-title(xlab=expression(paste( Delta," allele frequency: ", "D1 pH 8.0 vs. D1 pH 7.5")), line=2.3, cex.lab=1)
-
-#legend("bottomright", c("1:1"), xpd = TRUE,
-#   horiz = FALSE, inset = c(0, 0),
-#   lty = c(2, 1), col = c("firebrick3", "firebrick3"), lwd=1.8, cex=1)
-
-dev.off()
-# add rectangle around inset fig
-#rect(xleft=0.17, xright=0.365, ybottom=-0.1, ytop=0.16)
-
-# add inset histogram
-pdf("~/urchin_af/figures/Fig_06_2.pdf", height=5, width=5)
-
-hist(d1_d1,  col = alpha("black", 0.5), freq=FALSE,
-    ylab="", xlab="",
-    xaxt="n",yaxt="n",
-    main="",
-    xlim=c(0,.3))
-hist(d1_d7,  col = alpha("firebrick3", 0.5), freq=FALSE, add=T)
-axis(1, mgp=c(0.5, 0.1, 0), cex.axis=0.8, tcl=-0.2) # second is tick mark labels
-axis(2, mgp=c(0.5, 0.1, 0), cex.axis=0.8, tcl=-0.2)
-
-title(ylab="Density", cex.lab=1, line=2)
-title(xlab="Avg. change in allele frequency", line=2, cex.lab=1)
-legend("topright", c("D1 pH 8.0 vs. D1 pH 7.5", "D1 pH 8.0 vs. D7 pH 7.5"),
-    horiz = FALSE, inset = c(0, 0),
-    bty = "n", pch = c(15, 15), col = c("black", "firebrick3"), pt.cex=1, cex=1)
+legend("topleft", c("pH 7.5 significant",
+                    "pH 8.0 significant",
+                    "Overlapping selected"),
+    horiz = FALSE, inset = c(0, 0), pch = c(19, 19, 19),
+    col = c("firebrick3", "royalblue3","darkorchid4"), pt.cex=1, cex=0.7)
 
 dev.off()
