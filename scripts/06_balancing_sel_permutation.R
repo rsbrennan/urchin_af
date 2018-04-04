@@ -9,7 +9,7 @@ library(scales)
 
 mydata <- read.table("~/urchin_af/analysis/adaptive_allelefreq.txt", stringsAsFactors=FALSE, header=TRUE)
 
-cut_off <- 0.01
+cut_off <- 0.001
 # need to pull out only selected alleles
 snp.sel_75 <- mydata$af_out[which(mydata$pH7_selection_qval < cut_off & mydata$pH8_selection_qval >= cut_off)]
 snp.sel_80 <- mydata$af_out[which(mydata$pH8_selection_qval < cut_off & mydata$pH7_selection_qval >= cut_off)]
@@ -100,7 +100,7 @@ my_results_par <- foreach(perm_rep = 1:500, .combine='comb', .multicombine=TRUE,
 
 # pull out sfs of sig results
 
-cut_off <- 0.01
+cut_off <- 0.001
 out <- cbind(dp1.sub,dp2.sub )
 pop <- colnames(out)
 
@@ -177,7 +177,7 @@ for (i in 1:nrow(af)) {
 
 control_selection_qval <- qvalue(control_selection_pval)$qvalues
 control_selection_qval[which(is.na(control_selection_qval))] <- 1 # bc some are invariant
-cut_off <- quantile(control_selection_qval, 0.02)
+cut_off <- quantile(control_selection_qval, 0.015)
 
 # need to pull out only selected alleles
 snp.sel <- af_out[which(control_selection_qval < cut_off)]
@@ -189,9 +189,9 @@ snp.sel <- af_out[which(control_selection_qval < cut_off)]
 
 # I think this might just add it to my_results_par
 
-list(ks.test(snp.sel_80, snp.sel)$p.value, 
-    ks.test(snp.sel_75,snp.sel)$p.value, 
-    ks.test(snp.sel_both,snp.sel)$p.value, 
+list(ks.test(snp.sel_80, snp.sel)$p.value,
+    ks.test(snp.sel_75,snp.sel)$p.value,
+    ks.test(snp.sel_both,snp.sel)$p.value,
     snp.sel)
 
 }
@@ -217,16 +217,25 @@ png("~/urchin_af/figures/maf_unfolded_permute.png", res=301, height=7, width=7, 
 
 plot(density(0:1), ylim=c(0,3),xlim=c(0,1), lwd=0,
     main="", xlab="allele frequency")
-
+avg_perm <- c()
 for (i in 1: ncol(my_results_par[[4]])){
     lines(density(unlist(my_results_par[[4]][,i]),na.rm=TRUE), col=alpha("black", 0.08), lwd=1)
+    avg_perm <- c(avg_perm, unlist(my_results_par[[4]][,i]))
 }
 
 lines(density(snp.sel_75), col=alpha("firebrick3", 1), lwd=3)
 lines(density(snp.sel_80), col=alpha("royalblue3", 1), lwd=3)
 lines(density(snp.sel_both), col=alpha("darkorchid2", 1), lwd=3)
+#lines(density(avg_perm), col=alpha("darkgoldenrod3", 1), lwd=3, lty=2)
 
-legend("topright", c("permuted", "D7 pH 7.5: selected", "D7 pH 8.0: selected", "Overlapping selected"),
-    pch=19, col=c("black", "firebrick3", "royalblue3", "darkorchid2"))
+abline(v=mean(avg_perm), lty=2, col= "black", lwd=3)
+abline(v=mean(snp.sel_75), lty=2, col= "firebrick3", lwd=3)
+abline(v=mean(snp.sel_80), lty=2, col= "royalblue3", lwd=3)
+abline(v=mean(snp.sel_both), lty=2, col= "darkorchid2", lwd=3)
+
+legend("topright", c("permuted", "pH 7.5: selected", "pH 8.0: selected", "Overlapping selected"),
+    pch=19, col=c("black", "firebrick3", "royalblue3", "darkorchid2"), lty=NULL)
 
 dev.off()
+
+
