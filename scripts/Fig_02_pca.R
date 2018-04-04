@@ -83,7 +83,7 @@ title(ylab="PC2: 20.7%", line=2, cex.lab=1.05)
 
 legend("topright", pch=c(21,22,24),
     pt.bg=c("gray31", "royalblue3", "firebrick3") ,
-    legend=c(expression('T'[0]), "Day 7 pH 8.0", "Day 7 pH 7.5" ),
+    legend=c(expression('T'[0]), "pH 8.0", "pH 7.5" ),
     pt.cex=1.6, cex=0.85)
 
 dev.off()

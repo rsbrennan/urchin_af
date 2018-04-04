@@ -109,11 +109,11 @@ title(ylab="Estimated Linkage Disequilibrium", line=2, cex.lab=0.8)
 
 legend(90,0.4,
     legend=c(expression('T'[0]),
-            "pH 7.5 Day 7: selected",
-            "pH 7.5 Day 7: neutral",
-            "pH 8.0 Day 7: selected",
-            "pH 8.0 Day 7: neutral"),
-       col=c("black", "firebrick3", "firebrick3", "royalblue3", "royalblue3"), 
+            "pH 7.5: selected",
+            "pH 7.5: neutral",
+            "pH 8.0: selected",
+            "pH 8.0: neutral"),
+       col=c("black", "firebrick3", "firebrick3", "royalblue3", "royalblue3"),
        lty=c(2,1,2,1,2), lwd=2.6, cex=0.6)
 
 mtext(text="A",
@@ -174,11 +174,11 @@ lines(sort(dat.d7_7_sel$distance, decreasing=FALSE), sort(fitted(mod.d7_7_sel), 
 
 legend(90,0.4,
     legend=c("Permuted",
-            "pH 7.5 Day 7: selected",
-            "pH 7.5 Day 7: neutral",
-            "pH 8.0 Day 7: selected",
-            "pH 8.0 Day 7: neutral"),
-       col=c("black", "firebrick3", "firebrick3", "royalblue3", "royalblue3"), 
+            "pH 7.5: selected",
+            "pH 7.5: neutral",
+            "pH 8.0: selected",
+            "pH 8.0: neutral"),
+       col=c("black", "firebrick3", "firebrick3", "royalblue3", "royalblue3"),
        lty=c(1,2,1,2,1), lwd=2.5, cex=0.6)
 
 mtext(text="B",
@@ -188,7 +188,7 @@ mtext(text="B",
 
 dev.off()
 
-length(which(ks.val.sel < 0.05)) 
+length(which(ks.val.sel < 0.05))
 length(which(ks.mod.sel < 0.05))
 length(which(ks.val.ctr < 0.05))
 length(which(ks.mod.ctr < 0.05))
@@ -298,11 +298,10 @@ for(i in 1:nrow(a)){
         pch=25, cex=1.1, lwd=1.5)
 }
 
-legend(75,0.5,legend=c("pH 7.5 Day 7: selected","pH 7.5 Day 7: neutral", 
-    "pH 8.0 Day 7: selected", "pH 8.0 Day 7: neutral", expression('T'[0])),
+legend(75,0.5,legend=c("pH 7.5: selected","pH 7.5: neutral",
+    "pH 8.0: selected", "pH 8.0: neutral", expression('T'[0])),
        col=c("red", "red", "blue","blue", "black"), pt.bg=c("red", "red", "blue","blue", "black"),
         pch=c(25,21,24,22,22), cex=0.9)
 
 
 dev.off()
-
