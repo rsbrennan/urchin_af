@@ -38,8 +38,8 @@ dat <- data.frame(sapply(dat, function(x) as.numeric(as.character(x))))
 dep.keep <- dat
 
 # make empty data frame to hold af
-af <- data.frame(matrix(ncol=15, nrow=nrow(dep.keep)))
-pop <- unique(substr(colnames(dep),1,7))
+af <- data.frame(matrix(ncol=12, nrow=nrow(dep.keep)))
+pop <- unique(substr(colnames(dep.keep),1,7))
 colnames(af) <- pop
 
 for(i in 1:ncol(af)){
@@ -87,7 +87,7 @@ colnames(af.mean) <- c("D1_8_mean", "D7_7_mean", "D7_8_mean")
 # add snp info, etc to this.
 keep.info <- snp.info[,1:2]
 
-write.table(file="~/urchin_af/data/allele.freq.txt",cbind(keep.info, dep.keep, af, af.mean), 
+write.table(file="~/urchin_af/data/allele.freq.txt",cbind(keep.info, dep.keep, af, af.mean),
   row.names=FALSE, col.names=TRUE, quote=FALSE, sep="\t")
 
 
@@ -173,7 +173,7 @@ for(i in 1:nrow(mydata)){
     test <- mantelhaen.test(Data.xtabs)
     pH8_selection_pval[i] <- test$p.value
 
-    #if (i%%5000 == 0){print(i)}
+    if (i%%5000 == 0){print(i)}
     #ftable(Data.xtabs)
 }
 
@@ -191,7 +191,7 @@ mydata$pH7_selection_pval <- pH7_selection_pval
 mydata$pH8_selection_qval <- qvalue(pH8_selection_pval)$qvalues
 mydata$pH7_selection_qval <- qvalue(pH7_selection_pval)$qvalues
 
-cut_off <- 0.01
+cut_off <- 0.001
 
 mydata$pH7_sig <- FALSE
 mydata$pH7_sig[which(mydata$pH7_selection_qval < cut_off)] <- TRUE
@@ -202,4 +202,3 @@ mydata$pH8_sig[which(mydata$pH8_selection_qval < cut_off)] <- TRUE
 ################ save output ########################
 
 write.table(file="~/urchin_af/analysis/cmh.out.txt", mydata, col.names=TRUE, row.names=FALSE, quote=FALSE,sep="\t")
-
