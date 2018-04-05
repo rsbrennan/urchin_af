@@ -15,8 +15,8 @@ dat$sig <- as.logical(dat$sig_pH75)
 geneID2GO <- readMappings(file = "~/urchin_af/analysis/go_enrichment/topGO.pH75.master.annotation")
 
 dat$sig <- FALSE
-dat$sig[which(dat$qval_pH75 < 0.01)] <- TRUE
-dat$sig[which(dat$qval_pH80 < 0.01)] <- FALSE
+dat$sig[which(dat$qval_pH75 < 0.001)] <- TRUE
+#dat$sig[which(dat$qval_pH80 < 0.001)] <- FALSE
 
 # set gene background
 geneUniverse <- names(geneID2GO)
@@ -35,7 +35,7 @@ resultWeight <- runTest(myGOdata, algorithm="weight", statistic="fisher")
 resultClassic <- runTest(myGOdata, algorithm="classic", statistic="fisher")
 
 allRes <- GenTable(myGOdata, classicFisher = resultClassic,  weight = resultWeight, orderBy = "weight", ranksOf = "weight",
-    topNodes = 16)
+    topNodes = 19)
 
 # find genes associated with sig go terms
 myterms = allRes$GO.ID
@@ -106,7 +106,7 @@ resultWeight <- runTest(myGOdata, algorithm="weight", statistic="fisher")
 resultClassic <- runTest(myGOdata, algorithm="classic", statistic="fisher")
 
 allRes <- GenTable(myGOdata, classicFisher = resultClassic,  weight = resultWeight, orderBy = "weight", ranksOf = "weight",
-    topNodes = 11)
+    topNodes = 10)
 
 # find genes associated with sig go terms
 myterms = allRes$GO.ID
@@ -143,8 +143,8 @@ dat$sig <- as.logical(dat$sig_pH80)
 geneID2GO <- readMappings(file = "~/urchin_af/analysis/go_enrichment/topGO.pH80.master.annotation")
 
 dat$sig <- FALSE
-dat$sig[which(dat$qval_pH80 < 0.01)] <- TRUE
-dat$sig[which(dat$qval_pH75 < 0.01)] <- FALSE
+dat$sig[which(dat$qval_pH80 < 0.001)] <- TRUE
+#dat$sig[which(dat$qval_pH75 < 0.001)] <- FALSE
 
 # set gene background
 geneUniverse <- names(geneID2GO)
@@ -163,7 +163,7 @@ resultWeight <- runTest(myGOdata, algorithm="weight", statistic="fisher")
 resultClassic <- runTest(myGOdata, algorithm="classic", statistic="fisher")
 
 allRes <- GenTable(myGOdata, classicFisher = resultClassic,  weight = resultWeight, orderBy = "weight", ranksOf = "weight",
-    topNodes = 14)
+    topNodes = 12)
 
 # find genes associated with sig go terms
 myterms = allRes$GO.ID
@@ -198,7 +198,7 @@ resultWeight <- runTest(myGOdata, algorithm="weight", statistic="fisher")
 resultClassic <- runTest(myGOdata, algorithm="classic", statistic="fisher")
 
 allRes <- GenTable(myGOdata, classicFisher = resultClassic,  weight = resultWeight, orderBy = "weight", ranksOf = "weight",
-    topNodes = 22)
+    topNodes = 15)
 
 # find genes associated with sig go terms
 myterms = allRes$GO.ID
@@ -234,7 +234,7 @@ resultWeight <- runTest(myGOdata, algorithm="weight", statistic="fisher")
 resultClassic <- runTest(myGOdata, algorithm="classic", statistic="fisher")
 
 allRes <- GenTable(myGOdata, classicFisher = resultClassic,  weight = resultWeight, orderBy = "weight", ranksOf = "weight",
-    topNodes = 6)
+    topNodes = 7)
 
 # find genes associated with sig go terms
 myterms = allRes$GO.ID
@@ -287,7 +287,7 @@ resultWeight <- runTest(myGOdata, algorithm="weight", statistic="fisher")
 resultClassic <- runTest(myGOdata, algorithm="classic", statistic="fisher")
 
 allRes <- GenTable(myGOdata, classicFisher = resultClassic,  weight = resultWeight, orderBy = "weight", ranksOf = "weight",
-    topNodes = 15)
+    topNodes = 21)
 
 # find genes associated with sig go terms
 myterms = allRes$GO.ID
@@ -322,7 +322,7 @@ resultWeight <- runTest(myGOdata, algorithm="weight", statistic="fisher")
 resultClassic <- runTest(myGOdata, algorithm="classic", statistic="fisher")
 
 allRes <- GenTable(myGOdata, classicFisher = resultClassic,  weight = resultWeight, orderBy = "weight", ranksOf = "weight",
-    topNodes = 14)
+    topNodes = 23)
 
 # find genes associated with sig go terms
 myterms = allRes$GO.ID
@@ -358,7 +358,7 @@ resultWeight <- runTest(myGOdata, algorithm="weight", statistic="fisher")
 resultClassic <- runTest(myGOdata, algorithm="classic", statistic="fisher")
 
 allRes <- GenTable(myGOdata, classicFisher = resultClassic,  weight = resultWeight, orderBy = "weight", ranksOf = "weight",
-    topNodes = 8)
+    topNodes = 7)
 
 # find genes associated with sig go terms
 myterms = allRes$GO.ID
