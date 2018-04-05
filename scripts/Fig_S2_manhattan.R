@@ -71,7 +71,7 @@ selected_both <- mydata[which(mydata$pH8_selection_qval < cut_off & mydata$pH7_s
     #axis(1, at=ticks, labels=rep("", length(ticks)), cex.axis=0.8, mgp=c(0,0.4,0.1))
     #axis(1, at=ticks[(seq(2,24,2))], labels=labs[(seq(2,24,2))], cex.axis=0.8, mgp=c(0,0.4,0.1))
     my_labs <- seq(0,24.42359 , by = 4)
-    axis(side = 2, at = my_labs, labels = my_labs, cex.axis=0.8,mgp=c(0,0.4,0.1))
+    axis(side = 2, at = my_labs, labels = my_labs, cex.axis=0.7,mgp=c(0,0.4,0.1))
 
 
     # Create a vector of alternatiting colors    
@@ -154,7 +154,7 @@ d=data.frame(CHR=new.dat$CHR, BP=new.dat$POS, P=-log10(new.dat$pH8_selection_qva
    # axis(1, at=ticks, labels=rep("", length(ticks)), cex.axis=0.8, mgp=c(0,0.4,0.1))
     #axis(1, at=ticks[(seq(2,24,2))], labels=labs[(seq(2,24,2))], cex.axis=0.8, mgp=c(0,0.4,0.1))
     my_labs <- seq(0,24.42359, by = 4)
-    axis(side = 2, at = my_labs, labels = my_labs, cex.axis=0.8,mgp=c(0,0.4,0.1))
+    axis(side = 2, at = my_labs, labels = my_labs, cex.axis=0.7,mgp=c(0,0.4,0.1))
 
 
     # Create a vector of alternatiting colors    
@@ -187,6 +187,15 @@ mtext(text="B",
         side=3, line=0,
              cex=1.5,
             at=par("usr")[1]-0.06*diff(par("usr")[1:2]), outer=FALSE)
+
+par(fig = c(0.00, 0.97, 0, 0.55), oma = c(0, 0, 0, 0), mar = c(0, 0, 0, 0), new = TRUE)
+plot(0,0, type = "n", bty = "n", xaxt = "n", yaxt = "n")
+
+legend("topright", legend= c("pH 7.5", "pH 8.0", "overlapping variants"),
+    horiz = FALSE,
+    pch = c(21,22,24), col=c("black", "black", "black"), pt.bg = c( "firebrick1", "royalblue1", "darkorchid1"), 
+    cex=0.9, pt.cex=1.3)
+
 
 
 dev.off()
