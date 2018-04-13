@@ -114,7 +114,7 @@ legend(90,0.4,
             "pH 8.0: selected",
             "pH 8.0: neutral"),
        col=c("black", "firebrick3", "firebrick3", "royalblue3", "royalblue3"),
-       lty=c(2,1,2,1,2), lwd=2.6, cex=0.6)
+       lty=c(2,1,2,1,2), lwd=2.2, cex=0.8)
 
 mtext(text="A",
         side=3, line=0,
@@ -179,7 +179,7 @@ legend(90,0.4,
             "pH 8.0: selected",
             "pH 8.0: neutral"),
        col=c("black", "firebrick3", "firebrick3", "royalblue3", "royalblue3"),
-       lty=c(1,2,1,2,1), lwd=2.5, cex=0.6)
+       lty=c(1,2,1,2,1), lwd=2.2, cex=0.8)
 
 mtext(text="B",
         side=3, line=0,
