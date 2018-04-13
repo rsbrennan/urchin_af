@@ -100,9 +100,9 @@ with open('/users/r/b/rbrennan/urchin_af/analysis/cmh.master.sort.out') as maste
 # then join together sig or not, snp name, etc
 
 out_1 = np.column_stack((snp_out, go_spu_out))
-
 head2 = head1.split("\n")[0]
 head3 = head2 + "\t" + "WHL" + "\t" + "WHL_SPU" + "\t" + "WHL_name"
 head_final = head3.split("\t")
+head_final = [x.strip(' ') for x in head_final]
 out_final = np.vstack((head_final, out_1))
 np.savetxt('/users/r/b/rbrennan/urchin_af/analysis/cmh.master_goodnm.out', out_final,fmt='%5s', delimiter='\t')
