@@ -55,8 +55,7 @@ x$singular.values[2]/sum(x$singular.values)*100
 # black triangle Day 7 8.0
 # red triangle Day 7 7.5
 
-
-sp <- c(24,21,22)
+sp <- c(21,23,22)
 bg.col <-  c("firebrick3", "gray48","royalblue3")
 
 tiff("~/urchin_af/figures/Fig_03_pca.tiff", res=300, height=85, width=85, units="mm")
@@ -81,7 +80,7 @@ axis(2, mgp=c(2, .5, 0), cex.axis=0.7)
 title(xlab="PC1: 22.0%", line=2, cex.lab=1.05)
 title(ylab="PC2: 20.7%", line=2, cex.lab=1.05)
 
-legend("topright", pch=c(21,22,24),
+legend("topright", pch=c(23,22,21),
     pt.bg=c("gray31", "royalblue3", "firebrick3") ,
     legend=c(expression('T'[0]), "pH 8.0", "pH 7.5" ),
     pt.cex=1.6, cex=0.85)
