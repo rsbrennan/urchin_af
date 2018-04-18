@@ -52,10 +52,8 @@ cor.test(d7_7_both, d7_8_both,
          method = "pearson",
          conf.level = 0.95)
 
-png("~/urchin_af/figures/Fig_06_afchangecomp.png", height=100, width=120, units="mm", res=300)
-
-par(mar=c(3, 3, 1.7, 1), mgp=c(3, 1, 0), las=0)
-par(fig = c(0,1,0,1)) # this sets location of first plot
+tiff("~/urchin_af/figures/Fig_06_afchangecomp.tiff", height=100, width=200, units="mm", res=300)
+par(mfrow = c(1, 2), mar=c(3, 3, 1.7, 1), mgp=c(3, 1, 0), las=0)
 plot(0,type='n', xlim=c(0,.39), ylim=c(0,.39),
     main="",
     ylab="",
@@ -63,12 +61,12 @@ plot(0,type='n', xlim=c(0,.39), ylim=c(0,.39),
     cex.lab=1.1, cex.axis=1,
     xaxt="n",yaxt="n")
 box(which="plot")
-points(x=d7_8_s7, y=d7_7_s7, pch=21, col=alpha("firebrick3", 0.2),
-    bg = alpha("firebrick3", 0.2), cex=0.8)
-points(x=d7_8_s8, y=d7_7_s8, pch=21, col=alpha("royalblue3", 0.2),
-    bg = alpha("royalblue3", 0.2), cex=0.8)
-points(x=d7_8_both, y=d7_7_both, pch=21, col=alpha("darkorchid4", 0.7),
-    bg = alpha("darkorchid4", 0.7), cex=0.8)
+points(x=d7_8_s7, y=d7_7_s7, col=alpha("firebrick3", 0.2),
+    bg = alpha("firebrick3", 0.2), cex=0.8, pch=21)
+points(x=d7_8_s8, y=d7_7_s8, col=alpha("royalblue3", 0.2),
+    bg = alpha("royalblue3", 0.2),  cex=0.8, pch=22)
+points(x=d7_8_both, y=d7_7_both, col=alpha("darkorchid4", 0.7),
+    bg = alpha("darkorchid4", 0.7), cex=0.8, pch=24)
 
 abline(0, 1, col="black", lty=2, lwd=2.2)
 
@@ -77,10 +75,74 @@ axis(2, mgp=c(1.8, .4, 0), cex.axis=0.6, tcl=-0.2)
 title(ylab=expression(paste(Delta," allele frequency pH 7.5")), line=1.5, cex.lab=0.7)
 title(xlab=expression(paste(Delta," allele frequency pH 8.0")), line=1.5, cex.lab=0.7)
 
-legend("topleft", c("pH 7.5 significant",
-                    "pH 8.0 significant",
+legend("topleft", c("pH 7.5 selected",
+                    "pH 8.0 selected",
                     "Overlapping selected"),
-    horiz = FALSE, inset = c(0, 0), pch = c(19, 19, 19),
-    col = c("firebrick3", "royalblue3","darkorchid4"), pt.cex=1, cex=0.7)
+    horiz = FALSE, inset = c(0, 0),
+    col = c("firebrick3", "royalblue3","darkorchid4"),
+    pt.bg = c("firebrick3", "royalblue3","darkorchid4"), 
+    pt.cex=1, cex=0.7, pch=c(21,22,24))
+
+
+mtext(text="A",
+        side=3, line=0,
+             cex=1.5,
+            at=par("usr")[1]-0.14*diff(par("usr")[1:2]), outer=FALSE)
+
+######
+##
+## maf plot
+##
+######
+
+# read in data from permutation in 06_balancing_sel_permutation.R
+
+mydata <- read.table("~/urchin_af/analysis/adaptive_allelefreq.txt", stringsAsFactors=FALSE, header=TRUE)
+perm_dat <- read.table("~/urchin_af/analysis/permutation_af.txt", stringsAsFactors=FALSE, header=TRUE)
+
+cut_off <- 0.001
+# need to pull out only selected alleles
+snp.sel_75 <- mydata$af_out[which(mydata$pH7_selection_qval < cut_off & mydata$pH8_selection_qval >= cut_off)]
+snp.sel_80 <- mydata$af_out[which(mydata$pH8_selection_qval < cut_off & mydata$pH7_selection_qval >= cut_off)]
+snp.sel_both <- mydata$af_out[which(mydata$pH8_selection_qval < cut_off & mydata$pH7_selection_qval < cut_off)]
+
+plot(density(0:1), ylim=c(0,3),xlim=c(0,1), lwd=0,
+    main="",
+    ylab="",
+    xlab="",
+    cex.lab=1.1, cex.axis=1,
+    xaxt="n",yaxt="n")
+
+axis(1, mgp=c(1.8, .2, 0), cex.axis=0.6,tcl=-0.2) # second is tick mark labels
+axis(2, mgp=c(1.8, .4, 0), cex.axis=0.6, tcl=-0.2)
+title(ylab="Density", line=1.5, cex.lab=0.7)
+title(xlab="Starting allele frequency", line=1.5, cex.lab=0.7)
+
+avg_perm <- c()
+for (i in 1: ncol(perm_dat)){
+    lines(density(unlist(perm_dat[,i]),na.rm=TRUE), col=alpha("black", 0.08), lwd=1)
+    avg_perm <- c(avg_perm, unlist(perm_dat[,i]))
+}
+
+lines(density(snp.sel_75), col=alpha("firebrick3", 1), lwd=3)
+lines(density(snp.sel_80), col=alpha("royalblue3", 1), lwd=3)
+lines(density(snp.sel_both), col=alpha("darkorchid2", 1), lwd=3)
+#lines(density(avg_perm), col=alpha("darkgoldenrod3", 1), lwd=3, lty=2)
+
+abline(v=mean(avg_perm), lty=2, col= "black", lwd=3)
+abline(v=mean(snp.sel_75), lty=2, col= "firebrick3", lwd=3)
+abline(v=mean(snp.sel_80), lty=2, col= "royalblue3", lwd=3)
+abline(v=mean(snp.sel_both), lty=2, col= "darkorchid2", lwd=3)
+
+legend("topright", c("permuted", "pH 7.5: selected", "pH 8.0: selected", "Overlapping selected"),
+    col=c("black", "firebrick3", "royalblue3", "darkorchid2"), lty=1,
+    cex=0.7, lwd=2)
+
+
+mtext(text="B",
+        side=3, line=0,
+             cex=1.5,
+            at=par("usr")[1]-0.14*diff(par("usr")[1:2]), outer=FALSE)
+
 
 dev.off()
