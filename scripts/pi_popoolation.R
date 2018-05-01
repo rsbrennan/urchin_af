@@ -5,8 +5,7 @@ D1_8 <- D1_8[which(D1_8$V5 != "na"),]
 colnames(D1_8) <- c("CHR", "POS", "n_snp", "per_cov", "pi")
 mean(as.numeric(D1_8$pi))
 
-# pi: 0.008961568
-# from vcftools: 0.008685982
+# pi: 0.01582153
 
 D7_7 <- read.table("~/urchin_af/variants/D7_7.pi", header=FALSE, stringsAsFactors=FALSE)
 D7_7 <- D7_7[which(D7_7$V5 != "na"),]
@@ -20,7 +19,7 @@ colnames(D7_8) <- c("CHR", "POS", "n_snp", "per_cov", "pi")
 
 mean(as.numeric(D7_8$pi))
 
-# pretty different number per group
+# fairly different number per group
 nrow(D1_8)
 nrow(D7_7)
 nrow(D7_8)

@@ -1,8 +1,4 @@
-# 05_balancing_sel.R
-
-# snp assignments
-
-library(stringr)
+brary(stringr)
 library(ggplot2)
 library(gridExtra)
 library(MASS)
@@ -122,7 +118,7 @@ new$sig_pH7 <- cmh$pH7_sig[match(new$SNP, cmh$SNP)]
 new$sig_pH8 <- cmh$pH8_sig[match(new$SNP, cmh$SNP)]
 
 # assign class  ie, intergenic, etc
-new$class <- c(NA) 
+new$class <- c(NA)
 
 new$class[which(new$Annotation == "downstream_gene_variant" |
     new$Annotation == "intergenic_region" |
@@ -413,7 +409,8 @@ a <- ggplot(data=ns.fq.dat, aes(x=bin, y=allele_frequency, fill=class, group=cla
 geom_bar(stat="identity", color="black", position=position_dodge())+
   theme_bw() + scale_fill_manual(values=c('royalblue4','tomato3', 'darkolivegreen3', 'grey38'))+
   theme(axis.text.x = element_text(angle = 45, hjust = 1))+
-  ylim(0, 0.35) +
+  ylim(0, 0.45) +
+  guides(size = FALSE) +
   ggtitle("non-synonymous")+
   ylab("relative frequency") +
   theme(legend.title=element_blank())
@@ -422,7 +419,8 @@ b <- ggplot(data=syn.fq.dat, aes(x=bin, y=allele_frequency, fill=class, group=cl
 geom_bar(stat="identity", color="black", position=position_dodge())+
   theme_bw() + scale_fill_manual(values=c('royalblue4','tomato3', 'darkolivegreen3', 'grey38'))+
   theme(axis.text.x = element_text(angle = 45, hjust = 1))+
-  ylim(0, 0.35) +
+  ylim(0, 0.45) +
+  guides(size = FALSE) +
   ggtitle("synonymous")+
   ylab("relative frequency") +
   theme(legend.title=element_blank())
@@ -431,7 +429,8 @@ c <- ggplot(data=intron.fq.dat, aes(x=bin, y=allele_frequency, fill=class, group
 geom_bar(stat="identity", color="black", position=position_dodge())+
   theme_bw() + scale_fill_manual(values=c('royalblue4','tomato3', 'darkolivegreen3', 'grey38'))+
   theme(axis.text.x = element_text(angle = 45, hjust = 1))+
-  ylim(0, 0.35) +
+  ylim(0, 0.45) +
+  guides(size = FALSE) +
   ggtitle("intron")+
   ylab("relative frequency") +
   theme(legend.title=element_blank())
@@ -441,15 +440,38 @@ geom_bar(stat="identity", color="black", position=position_dodge())+
   theme_bw() + scale_fill_manual(values=c('royalblue4','tomato3', 'darkolivegreen3', 'grey38'))+
   theme(axis.text.x = element_text(angle = 45, hjust = 1))+
   ggtitle("intergenic")+
-  ylim(0, 0.35) +
+  ylim(0, 0.45) +
+  guides(size = FALSE) +
   ylab("relative frequency") +
   theme(legend.title=element_blank())
 
+library(ggpubr)
+
 png("~/urchin_af/figures/AF_categories_unfolded_bin.png", height=7, res=300, units="in", width=10)
-grid.arrange(a, b, c, d, ncol=2)
+ggarrange(a, b, c, d, ncol=2, nrow=2, common.legend = TRUE, legend="bottom")
 dev.off()
 
 
+#extract legend
+#https://github.com/hadley/ggplot2/wiki/Share-a-legend-between-two-ggplot2-graphs
+g_legend<-function(a.gplot){
+  tmp <- ggplot_gtable(ggplot_build(a.gplot))
+  leg <- which(sapply(tmp$grobs, function(x) x$name) == "guide-box")
+  legend <- tmp$grobs[[leg]]
+  return(legend)}
+
+mylegend<-g_legend(a)
+
+p3 <- grid.arrange(arrangeGrob(a + theme(legend.position="none"),
+                         b + theme(legend.position="none"),
+                         c + theme(legend.position="none"),
+                         d + theme(legend.position="none"),
+                         nrow=2),
+             mylegend, nrow=2,heights=c(10, 1))
+
+png("~/urchin_af/figures/AF_categories_unfolded_bin.png", height=7, res=300, units="in", width=10)
+p3
+dev.off()
 
 ### Some stats
 
@@ -457,3 +479,4 @@ ks.test(ns.sel_7.merge$af_out, ns.sel_8.merge$af_out)
 ks.test(syn.sel_7.merge$af_out, syn.sel_8.merge$af_out)
 ks.test(intron.sel_7.merge$af_out, intron.sel_8.merge$af_out)
 ks.test(intergen.sel_7.merge$af_out, intergen.sel_8.merge$af_out)
+
