@@ -77,12 +77,12 @@ plot(y=pc_sum$PC2, x=pc_sum$PC1,
 axis(1, mgp=c(2, .5, 0), cex.axis=0.7) # second is tick mark labels
 axis(2, mgp=c(2, .5, 0), cex.axis=0.7)
 
-title(xlab="PC1: 22.0%", line=2, cex.lab=1.05)
-title(ylab="PC2: 20.7%", line=2, cex.lab=1.05)
+title(xlab="PC1: 22.0%", line=2, cex.lab=1)
+title(ylab="PC2: 20.7%", line=2, cex.lab=1)
 
 legend("topright", pch=c(23,22,21),
     pt.bg=c("gray31", "royalblue3", "firebrick3") ,
     legend=c(expression('T'[0]), "pH 8.0", "pH 7.5" ),
-    pt.cex=1.6, cex=0.85)
+    pt.cex=1.6, cex=0.8)
 
 dev.off()
