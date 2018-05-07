@@ -1,5 +1,8 @@
 library(scales)
 library(plyr)
+library(dplyr)
+library(broom)
+library(tidyr)
 
 ld.d1 <- read.table("~/urchin_af/analysis/D1.ld.out", header=FALSE)
 ld.d7_7 <- read.table("~/urchin_af/analysis/D7_7.ld.out", header=FALSE)
@@ -79,9 +82,81 @@ mod.d7_7_neut <- nls(mle_est ~ exp(a + b * distance), data = dat.d7_7_neut, star
 mod.d7_8_sel <-  nls(mle_est ~ exp(a + b * distance), data = dat.d7_8_sel,  start = list(a = 0, b = 0))
 mod.d7_8_neut <- nls(mle_est ~ exp(a + b * distance), data = dat.d7_8_neut, start = list(a = 0, b = 0))
 
-tiff("~/urchin_af/figures/Fig_05_ld.tiff", height=100, width=200, units="mm", res=300)
-par(mfrow = c(1, 2), mar=c(3, 3, 1.7, 1), mgp=c(3, 1, 0), las=0)
 
+#mtext(text="A",
+#        side=3, line=0,
+#             cex=1.5,
+#            at=par("usr")[1]-0.14*diff(par("usr")[1:2]), outer=FALSE)
+
+## sample random subgroups of data. compare to selected loci
+
+perm_length <- length(which(cmh$sel_pH7 == TRUE))
+
+ks.val.sel <- c()
+ks.mod.sel <- c()
+ks.val.ctr <- c()
+ks.mod.ctr <- c()
+
+perm.out <- list()
+
+for (i in 1:500){
+    rand.sel <- rep("FALSE", nrow(cmh))
+    rand.sel[sample(1:nrow(cmh), perm_length)]<- TRUE
+    selected.perm <- data.frame( cmh$CHROM, cmh$POS, cmh$SNP, rand.sel )
+    colnames(selected.perm) <- c("chr", "pos", "id", "selected")
+    dat.perm <- merge(ld.d7_7, selected.perm, by.x="id1", by.y="id", all.x=TRUE)
+    dat.perm <- merge(dat.perm, selected.perm, by.x="id2", by.y="id", all.x=TRUE)
+    dat.perm$distance <- abs(dat.perm$snp1-dat.perm$snp2)
+    dat.perm <- dat.perm[which(dat.perm$distance <=200),]
+    dat.perm <- dat.perm[which(dat.perm$selected.y == TRUE | dat.perm$selected.x == TRUE),]
+    mod.perm <- nls(mle_est ~ exp(a + b * distance), data = dat.perm, start = list(a = 0, b = 0))
+    #lines(sort(dat.perm$distance, decreasing=FALSE),
+    #    sort(fitted(mod.perm), decreasing=TRUE),
+    #    lwd=1, col=rgb(0,0,0,alpha=0.1))
+    if (i%%10 == 0){print(i)} # printing progress
+    ks.mod.sel[i] <- ks.test(fitted(mod.d7_7_sel), fitted(mod.perm))$p.value
+    ks.val.sel[i] <- ks.test(dat.d7_7_sel$mle_est, dat.perm$mle_est)$p.value
+    ks.mod.ctr[i] <- ks.test(fitted(mod.d7_8_sel), fitted(mod.perm))$p.value
+    ks.val.ctr[i] <- ks.test(dat.d7_8_sel$mle_est, dat.perm$mle_est)$p.value
+    perm.out[[i]] <- cbind(sort(dat.perm$distance, decreasing=FALSE), sort(fitted(mod.perm), decreasing=TRUE))
+
+}
+
+
+#########
+##
+## fig 2
+##
+#########
+## figure out CI
+
+# permutations saved in: perm.out
+
+# for each permutation, take the mean of the bin, then combine all perms. 
+
+out <- list()
+for (i in 1: length(perm.out)){
+
+    tmp.df <- data.frame(x=perm.out[[i]][,1],
+                            y= perm.out[[i]][,2],
+                        bin = cut(
+                            perm.out[[i]][,1], 
+                            breaks=seq(from=0, to=200, by=1), 
+                            labels=seq(from=1, to=200, by=1)))
+    out[[i]] <- data.frame(bin=seq(from=1, to=200, by=1), ld=tapply(tmp.df$y,tmp.df$bin , mean))
+}
+
+out.new <- do.call(rbind, out)
+
+densities.qtiles <- out.new %>%
+group_by(bin) %>%
+  summarise(q05 = quantile(ld, 0.025, na.rm=TRUE),
+            q50 = quantile(ld, 0.5, na.rm=TRUE),
+            q95 = quantile(ld, 0.975, na.rm=TRUE))
+
+
+tiff("~/urchin_af/figures/Fig_03_ld.tiff", height=100, width=100, units="mm", res=300)
+par(mfrow = c(1, 1), mar=c(3, 3, 1.7, 1), mgp=c(3, 1, 0), las=0)
 
 plot(0,type='n', xlim=c(0,200), ylim=c(0,0.4),
     main="",
@@ -90,7 +165,11 @@ plot(0,type='n', xlim=c(0,200), ylim=c(0,0.4),
     cex.lab=1, cex.axis=0.7,
     xaxt="n",yaxt="n")
 
-lines(sort(dat.d1$distance, decreasing=FALSE), sort(fitted(mod.d1), decreasing=TRUE), lwd=3, lty=2, col='black')
+polygon(x=c(densities.qtiles$bin,rev(densities.qtiles$bin)),
+    y=c(densities.qtiles$q05,rev(densities.qtiles$q95)),
+    col=alpha("black", alpha=0.3),border=NA)
+
+lines(densities.qtiles$bin, densities.qtiles$q50, lwd=3, lty=2, col='black')
 lines(sort(dat.d7_8_neut$distance, decreasing=FALSE), sort(fitted(mod.d7_8_neut), decreasing=TRUE),
     lwd=3.2, lty=2, col='royalblue3')
 lines(sort(dat.d7_7_neut$distance, decreasing=FALSE), sort(fitted(mod.d7_7_neut), decreasing=TRUE),
@@ -104,10 +183,10 @@ lines(sort(dat.d7_7_sel$distance, decreasing=FALSE), sort(fitted(mod.d7_7_sel), 
 
 axis(1, mgp=c(2, .5, 0), cex.axis=0.7) # second is tick mark labels
 axis(2, mgp=c(2, .5, 0), cex.axis=0.7)
-title(xlab="Distance between SNPs in base pairs", line=2, cex.lab=0.8)
-title(ylab="Estimated Linkage Disequilibrium", line=2, cex.lab=0.8)
+title(xlab="Distance between SNPs in base pairs", line=2, cex.lab=1)
+title(ylab="Estimated Linkage Disequilibrium", line=2, cex.lab=0.9)
 
-legend(90,0.4,
+legend("topright",
     legend=c(expression('T'[0]),
             "pH 7.5: selected",
             "pH 7.5: neutral",
@@ -116,12 +195,14 @@ legend(90,0.4,
        col=c("black", "firebrick3", "firebrick3", "royalblue3", "royalblue3"),
        lty=c(2,1,2,1,2), lwd=2.2, cex=0.8)
 
-mtext(text="A",
-        side=3, line=0,
-             cex=1.5,
-            at=par("usr")[1]-0.14*diff(par("usr")[1:2]), outer=FALSE)
+dev.off()
 
-## sample random subgroups of data. compare to selected loci
+
+
+
+png("~/urchin_af/figures/Fig_S02_ldperm.png", height=100, width=200, units="mm", res=300)
+#par(mfrow = c(1, 2), mar=c(3, 3, 1.7, 1), mgp=c(3, 1, 0), las=0)
+
 
 plot(0,type='n', xlim=c(0,200), ylim=c(0,0.4),
     main="",
@@ -129,36 +210,13 @@ plot(0,type='n', xlim=c(0,200), ylim=c(0,0.4),
     xlab="",
     cex.lab=1, cex.axis=0.7,
     xaxt="n",yaxt="n")
-axis(1, mgp=c(2, .5, 0), cex.axis=0.7) # second is tick mark labels
-axis(2, mgp=c(2, .5, 0), cex.axis=0.7)
-title(xlab="Distance between SNPs in base pairs", line=2, cex.lab=0.8)
 
-perm_length <- length(which(cmh$sel_pH7 == TRUE))
 
-ks.val.sel <- c()
-ks.mod.sel <- c()
-ks.val.ctr <- c()
-ks.mod.ctr <- c()
-
-for (i in 1:500){
-    rand.sel <- rep("FALSE", nrow(cmh))
-    rand.sel[sample(1:nrow(cmh), perm_length)]<- TRUE
-    selected.perm <- data.frame( cmh$CHROM, cmh$POS, cmh$SNP, rand.sel )
-    colnames(selected.perm) <- c("chr", "pos", "id", "selected")
-    dat.perm <- merge(ld.d7_7, selected.perm, by.x="id1", by.y="id", all.x=TRUE)
-    dat.perm <- merge(dat.perm, selected.perm, by.x="id2", by.y="id", all.x=TRUE)
-    dat.perm$distance <- abs(dat.perm$snp1-dat.perm$snp2)
-    dat.perm <- dat.perm[which(dat.perm$distance <=200),]
-    dat.perm <- dat.perm[which(dat.perm$selected.y == TRUE | dat.perm$selected.x == TRUE),]
-    mod.perm <- nls(mle_est ~ exp(a + b * distance), data = dat.perm, start = list(a = 0, b = 0))
-    lines(sort(dat.perm$distance, decreasing=FALSE),
-        sort(fitted(mod.perm), decreasing=TRUE),
+for (i in 1:length(perm.out)){
+    lines(perm.out[[i]][,1],
+          perm.out[[i]][,2],
         lwd=1, col=rgb(0,0,0,alpha=0.1))
    if (i%%25 == 0){print(i)} # printing progress
-    ks.mod.sel[i] <- ks.test(fitted(mod.d7_7_sel), fitted(mod.perm))$p.value
-    ks.val.sel[i] <- ks.test(dat.d7_7_sel$mle_est, dat.perm$mle_est)$p.value
-    ks.mod.ctr[i] <- ks.test(fitted(mod.d7_8_sel), fitted(mod.perm))$p.value
-    ks.val.ctr[i] <- ks.test(dat.d7_8_sel$mle_est, dat.perm$mle_est)$p.value
 }
 
 
@@ -172,8 +230,7 @@ lines(sort(dat.d7_7_sel$distance, decreasing=FALSE), sort(fitted(mod.d7_7_sel), 
     lwd=3, col='firebrick3')
 
 
-legend(90,0.4,
-    legend=c("Permuted",
+legend("topright", c(expression('T'[0] ~ "Permuted"),
             "pH 7.5: selected",
             "pH 7.5: neutral",
             "pH 8.0: selected",
@@ -181,17 +238,9 @@ legend(90,0.4,
        col=c("black", "firebrick3", "firebrick3", "royalblue3", "royalblue3"),
        lty=c(1,2,1,2,1), lwd=2.2, cex=0.8)
 
-mtext(text="B",
-        side=3, line=0,
-             cex=1.5,
-            at=par("usr")[1]-0.14*diff(par("usr")[1:2]), outer=FALSE)
 
 dev.off()
 
-length(which(ks.val.sel < 0.05))
-length(which(ks.mod.sel < 0.05))
-length(which(ks.val.ctr < 0.05))
-length(which(ks.mod.ctr < 0.05))
 
 
 
