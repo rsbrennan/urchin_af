@@ -1,6 +1,12 @@
 # Fig_04_afchangecomp.R
 
+library(dplyr)
+library(broom)
+library(tidyr)
 library(scales)
+library(gridBase)
+library(grid)
+library(ggplot2)
 
 mydata <- read.table("~/urchin_af/analysis/cmh.out.txt", header=TRUE)
 cut_off <- 0.001
@@ -54,6 +60,7 @@ cor.test(d7_7_both, d7_8_both,
          method = "pearson",
          conf.level = 0.95)
 
+
 tiff("~/urchin_af/figures/Fig_06_afchangecomp.tiff", height=100, width=200, units="mm", res=300)
 par(mfrow = c(1, 2), mar=c(3, 3, 1.7, 1), mgp=c(3, 1, 0), las=0)
 plot(0,type='n', xlim=c(0,.39), ylim=c(0,.39),
@@ -99,6 +106,11 @@ mtext(text="A",
  #sampling from entire dist
 
 mydata <- read.table("~/urchin_af/analysis/adaptive_allelefreq.txt", stringsAsFactors=FALSE, header=TRUE)
+cut_off <- 0.001
+# need to pull out only selected alleles
+snp.sel_75 <- mydata$af_out[which(mydata$pH7_selection_qval < cut_off & mydata$pH8_selection_qval >= cut_off)]
+snp.sel_80 <- mydata$af_out[which(mydata$pH8_selection_qval < cut_off & mydata$pH7_selection_qval >= cut_off)]
+snp.sel_both <- mydata$af_out[which(mydata$pH8_selection_qval < cut_off & mydata$pH7_selection_qval < cut_off)]
 
 nrep <- 1000
 nsamp <- length(snp.sel_75)
@@ -110,17 +122,32 @@ for(i in 1:nrep){
     avg_rep <- c(avg_rep, bs[,i])
 }
 
+# calc ks tests
+p_75 <- c()
+p_80 <- c()
+p_both <- c()
+
+for (i in 1:ncol(bs)){
+   p_75[i] <- ks.test(snp.sel_75, bs[,i])$p.value
+   p_80[i] <- ks.test(snp.sel_80, bs[,i])$p.value
+   p_both[i] <- ks.test(snp.sel_both, bs[,i])$p.value
+}
+
+length(which(p_75 < 0.05))
+length(which(p_80 < 0.05))
+length(which(p_both < 0.05))
+
 out <- list()
 for (i in 1: ncol(bs)){
 
-    out[[i]] <- data.frame(x=density(bs[,i], bw = 0.05)$x, 
-        y= density(bs[,i], bw = 0.05)$y, 
+    out[[i]] <- data.frame(x=density(bs[,i], bw = 0.05)$x,
+        y= density(bs[,i], bw = 0.05)$y,
         bin = cut(density(bs[,i], bw = 0.05)$x, breaks=seq(from=-0.3, to=1.3, by=0.01)))
 }
 
 out.new <- do.call(rbind, out)
 
-densities.qtiles <- out.new %>% 
+densities.qtiles <- out.new %>%
 group_by(bin) %>%
   summarise(q05 = quantile(y, 0.025),
             q50 = quantile(y, 0.5),
@@ -133,8 +160,6 @@ avg_perm <- c()
 for (i in 1: ncol(bs)){
     avg_perm <- c(avg_perm, bs[,i])
 }
-
-
 
 plot(density(0:1), ylim=c(0,4),xlim=c(0,1), lwd=0,
     main="",
@@ -156,8 +181,12 @@ lines(densities.qtiles$x,densities.qtiles$q50, col="black", lwd=3 )
 lines(density(snp.sel_75, bw=0.05), col=alpha("firebrick3", 1), lwd=3)
 lines(density(snp.sel_80,bw=0.05), col=alpha("royalblue3", 1), lwd=3)
 lines(density(snp.sel_both,bw=0.05), col=alpha("darkorchid2", 1), lwd=3)
+abline(v=mean(avg_perm), lty=2, col= "black", lwd=3)
+abline(v=mean(snp.sel_75), lty=2, col= "firebrick3", lwd=3)
+abline(v=mean(snp.sel_80), lty=2, col= "royalblue3", lwd=3)
+abline(v=mean(snp.sel_both), lty=2, col= "darkorchid2", lwd=3)
 
-legend("topright", c("permuted", "pH 7.5: selected", "pH 8.0: selected", "Overlapping selected"),
+legend("topright", c("neutral", "pH 7.5: selected", "pH 8.0: selected", "Overlapping selected"),
     col=c("black", "firebrick3", "royalblue3", "darkorchid2"), lty=1,
     cex=0.7, lwd=2)
 
@@ -169,5 +198,3 @@ mtext(text="B",
 
 
 dev.off()
-
-
