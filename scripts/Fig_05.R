@@ -1,4 +1,4 @@
-# figure 5
+# Fig_05.R
 
 library(qqman)
 
@@ -22,7 +22,7 @@ mydata$D7_8_delta <- abs(mydata$D1_8_mean-mydata$D7_8_mean)
 new.dat <- subset(mydata, CHR > 541 & CHR < 543)
 new.dat <- subset(new.dat, POS > 34350 & POS < 34510)
 
-d=data.frame(CHR=new.dat$CHR, BP=new.dat$POS, 
+d=data.frame(CHR=new.dat$CHR, BP=new.dat$POS,
             P=new.dat$pH7_selection_qval, P_8= new.dat$pH8_selection_qval,
             SNP=new.dat$SNP,
             D7_7_delta = new.dat$D7_7_delta, D7_8_delta=new.dat$D7_8_delta)
@@ -60,7 +60,7 @@ d=data.frame(CHR=new.dat$CHR, BP=new.dat$POS,
                      xlim=c(xmin,xmax), ylim=c(0,16),
                      xlab="", ylab="")
 
-png("~/urchin_af/figures/Fig_05.png", res=300, height=5, width=3.9, units="in")
+tiff("~/urchin_af/figures/Fig_05.tiff", res=300, height=109, width=85, units="mm")
 #dev.new(height=5, width=3.9)
 
 par(mfrow = c(2, 1), mar=c(1, 4, 3, 1), mgp=c(3, 1, 0), las=0)
@@ -82,18 +82,18 @@ lines((d$pos), d$D7_8_delta, col="royalblue3")
 points(d$pos, d$D7_8_delta, col="black",
     bg = "royalblue3", cex=1, pch=22)
 
-mtext(side=2,expression(paste(Delta, " allele frequency")), line=2.2, cex.lab=1)
-mtext(side=2, expression("vs. T"[0]), line=1.4, cex.lab=1)
+mtext(side=2,expression(paste(Delta, " allele frequency")), line=2.2, cex=0.8)
+mtext(side=2, expression("vs. T"[0]), line=1.4, cex=0.8)
 
 # add label
 mtext(text="A",
-        side=3, line=0,
+        side=3, line=0.3,
              cex=1.5,
             at=par("usr")[1]-0.2*diff(par("usr")[1:2]))
 
-legend("top",c("pH 7.5", "pH 8.0"), pch = c(21,22), 
-    col="black", pt.bg=c("firebrick3", "royalblue3"), 
-    horiz = TRUE, inset = c(0, -0.2), xpd=TRUE, cex=0.9, 
+legend("top",c("pH 7.5", "pH 8.0"), pch = c(21,22),
+    col="black", pt.bg=c("firebrick3", "royalblue3"),
+    horiz = TRUE, inset = c(0, -0.2), xpd=TRUE, cex=0.9,
     bty = "n", pt.cex=1.4)
 
 
@@ -121,9 +121,9 @@ lines((d$pos), -log10(d$P_8), col="royalblue3")
 points(d$pos, -log10(d$P_8), col="black",
     bg = "royalblue3", cex=1, pch=22)
 
-title(ylab=expression(-log[10](italic(q))), line=2, cex.lab=1)
+title(ylab=expression(-log[10](italic(q))), line=2, cex.lab=0.8)
 
-title(xlab="Scaffold542: position in BP", line=1.9, cex.lab=1)
+title(xlab="Scaffold542: position in BP", line=1.9, cex.lab=0.8)
 axis(2, mgp=c(1.8, .4, 0), cex.axis=0.7)
 
 
@@ -134,4 +134,3 @@ mtext(text="B",
             at=par("usr")[1]-0.2*diff(par("usr")[1:2]))
 
 dev.off()
-

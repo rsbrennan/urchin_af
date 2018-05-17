@@ -1,3 +1,6 @@
+# Fig_03_LD.R
+# Fig S01
+
 library(scales)
 library(plyr)
 library(dplyr)
@@ -82,12 +85,6 @@ mod.d7_7_neut <- nls(mle_est ~ exp(a + b * distance), data = dat.d7_7_neut, star
 mod.d7_8_sel <-  nls(mle_est ~ exp(a + b * distance), data = dat.d7_8_sel,  start = list(a = 0, b = 0))
 mod.d7_8_neut <- nls(mle_est ~ exp(a + b * distance), data = dat.d7_8_neut, start = list(a = 0, b = 0))
 
-
-#mtext(text="A",
-#        side=3, line=0,
-#             cex=1.5,
-#            at=par("usr")[1]-0.14*diff(par("usr")[1:2]), outer=FALSE)
-
 ## sample random subgroups of data. compare to selected loci
 
 perm_length <- length(which(cmh$sel_pH7 == TRUE))
@@ -125,14 +122,14 @@ for (i in 1:500){
 
 #########
 ##
-## fig 2
+## plot actual fig 2
 ##
 #########
 ## figure out CI
 
 # permutations saved in: perm.out
 
-# for each permutation, take the mean of the bin, then combine all perms. 
+# for each permutation, take the mean of the bin, then combine all perms.
 
 out <- list()
 for (i in 1: length(perm.out)){
@@ -140,8 +137,8 @@ for (i in 1: length(perm.out)){
     tmp.df <- data.frame(x=perm.out[[i]][,1],
                             y= perm.out[[i]][,2],
                         bin = cut(
-                            perm.out[[i]][,1], 
-                            breaks=seq(from=0, to=200, by=1), 
+                            perm.out[[i]][,1],
+                            breaks=seq(from=0, to=200, by=1),
                             labels=seq(from=1, to=200, by=1)))
     out[[i]] <- data.frame(bin=seq(from=1, to=200, by=1), ld=tapply(tmp.df$y,tmp.df$bin , mean))
 }
@@ -155,14 +152,14 @@ group_by(bin) %>%
             q95 = quantile(ld, 0.975, na.rm=TRUE))
 
 
-tiff("~/urchin_af/figures/Fig_03_ld.tiff", height=100, width=100, units="mm", res=300)
+tiff("~/urchin_af/figures/Fig_03_ld.tiff", height=85, width=85, units="mm", res=300)
 par(mfrow = c(1, 1), mar=c(3, 3, 1.7, 1), mgp=c(3, 1, 0), las=0)
 
 plot(0,type='n', xlim=c(0,200), ylim=c(0,0.4),
     main="",
     ylab="",
     xlab="",
-    cex.lab=1, cex.axis=0.7,
+    cex.lab=0.9, cex.axis=0.7,
     xaxt="n",yaxt="n")
 
 polygon(x=c(densities.qtiles$bin,rev(densities.qtiles$bin)),
@@ -183,7 +180,7 @@ lines(sort(dat.d7_7_sel$distance, decreasing=FALSE), sort(fitted(mod.d7_7_sel), 
 
 axis(1, mgp=c(2, .5, 0), cex.axis=0.7) # second is tick mark labels
 axis(2, mgp=c(2, .5, 0), cex.axis=0.7)
-title(xlab="Distance between SNPs in base pairs", line=2, cex.lab=1)
+title(xlab="Distance between SNPs in base pairs", line=2, cex.lab=0.9)
 title(ylab="Estimated Linkage Disequilibrium", line=2, cex.lab=0.9)
 
 legend("topright",
@@ -208,7 +205,7 @@ plot(0,type='n', xlim=c(0,200), ylim=c(0,0.4),
     main="",
     ylab="",
     xlab="",
-    cex.lab=1, cex.axis=0.7,
+    cex.lab=0.9, cex.axis=0.7,
     xaxt="n",yaxt="n")
 
 

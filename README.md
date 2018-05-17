@@ -33,27 +33,56 @@ Call variants: `01.1_variant_call.sh`
 
 #### filtering
 
-- Initial filtering for depth, bi-allelic: `01.2_vcf_filter.sh`
-- Pull out average depth. To assign max depth filter: `01.3_filter.R`
-- Filter max mean depth of 372: `01.4_filter_depth.sh`
+- Initial filtering for depth, bi-allelic: 
+    - `01.2_vcf_filter.sh`
+- Pull out average depth. To assign max depth filter: 
+    - `01.3_filter.R`
+- Filter max mean depth of 372: 
+    - `01.4_filter_depth.sh`
 - Off target filtering
-    - Find distance to closest probe: `01.5_probe_distance.sh`
-    - Output those within 2kb: `01.6_probe_distance.R`
-    - keep on target: `01.7_filter_final.sh`
+    - Find distance to closest probe: 
+        - `01.5_probe_distance.sh`
+    - Output those within 2kb: 
+        - `01.6_probe_distance.R`
+    - keep on target: 
+        - `01.7_filter_final.sh`
 
 ### Analysis
 
-- identify allele frequency changes: `02_AF_change.R`
-- polarize by "adaptive" allele: `03_polarize_adaptive.R`
-- assign overlap with gene models: `04_snpeff.sh`
-- Look at allele frequencies of selected loci: `05_balancing_sel.R`
-- Compare af distribution of selected loci vs 1% quantile of permuted samples. Basically to ask if we are pulling these out only because our cmh analysis is biased
+- identify allele frequency changes with CMH: 
+    - `02_AF_change.R`
+- polarize by "adaptive" allele: 
+    - `03_polarize_adaptive.R`
+- assign overlap with gene models: 
+    - `04_snpeff.sh`
+- Look at allele frequencies of selected loci: 
+    - `05_balancing_sel.R`
+- Compare af distribution of selected loci vs permuted samples. To ask if we are pulling these out only because our cmh analysis is biased
     - `06_balancing_sel_permutation.R`
-- Assign GO terms to SNPs: `07_snp_go_assign.py`
-- GO enrichment: `09_go_enrich.R`
-- LD decay: `11_ld.sh`
-- Look for overlap of selected genes with old studies: `12_gene_comparison_old_studies.R`
-
+- Assign GO terms to SNPs: 
+    - `07_snp_go_assign.py`
+    - some assigned names aren't very informative. Use transcriptome to update these or fill in missing
+        - `whl_assign.sh`
+        - `whl_assign.py`
+        - these output ``cmh.master_goodnm.out`, which is the final output
+- GO enrichment: 
+    - Choose only 1 snp per gene: 
+        - `go_format.R`
+    - then format: 
+        - `go_format.sh`
+    - run enrichment: 
+        - `09_go_enrich.R`
+- LD decay: 
+    - `11_ld.sh` (I know, I know, there's no #10)
+- Look for overlap of selected genes with old studies: 
+    - `12_gene_comparison_old_studies.R`
+- PCA: 
+    - `Fig_02_pca.R`
+- Nucleotide diversity: 
+    - first, sam to bam, then run popoolation. 
+        - `pi_popoolation.sh`
+    - Then calc with R: 
+        - `pi_popoolation.R`
 
 ### Figures
 
@@ -67,9 +96,9 @@ Supplemental Figures:
 - Figure S1: in `Fig_03_LD.R`
 - Figure S2: in `Fig_03_LD.R`
 - Figure S3: `Fig_S2_manhattan.R`
-- Figure S4:
-- Figure S5: 
-- Figure S6: 
+- Figure S4: 
+- Figure S5: `Fig_S4_S5.R`
+- Figure S6: `Fig_S4_S5.R`
 
 
 

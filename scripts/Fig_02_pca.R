@@ -1,3 +1,5 @@
+# Fig_02_pca.R
+
 library(pcadapt)
 library(dplyr)
 
@@ -58,10 +60,10 @@ x$singular.values[2]/sum(x$singular.values)*100
 sp <- c(21,23,22)
 bg.col <-  c("firebrick3", "gray48","royalblue3")
 
-tiff("~/urchin_af/figures/Fig_03_pca.tiff", res=300, height=85, width=85, units="mm")
+tiff("~/urchin_af/figures/Fig_02_pca.tiff", res=300, height=85, width=85, units="mm")
 
 #dev.new(width=3.35, height=3.35, units="mm")
-par(mar=c(3.5, 3.5, 0.5, 0.5))
+par(mfrow = c(1, 1), mar=c(3, 3, 1.7, 1), mgp=c(3, 1, 0), las=0)
 plot(y=pc_sum$PC2, x=pc_sum$PC1,
     pch=sp[as.factor(pc_sum$pH_day)],
     cex=1.6, col="black",
@@ -77,12 +79,12 @@ plot(y=pc_sum$PC2, x=pc_sum$PC1,
 axis(1, mgp=c(2, .5, 0), cex.axis=0.7) # second is tick mark labels
 axis(2, mgp=c(2, .5, 0), cex.axis=0.7)
 
-title(xlab="PC1: 22.0%", line=2, cex.lab=1)
-title(ylab="PC2: 20.7%", line=2, cex.lab=1)
+title(xlab="PC1: 22.0%", line=2, cex.lab=0.9)
+title(ylab="PC2: 20.7%", line=2, cex.lab=0.9)
 
-legend("topright", pch=c(23,22,21),
-    pt.bg=c("gray31", "royalblue3", "firebrick3") ,
-    legend=c(expression('T'[0]), "pH 8.0", "pH 7.5" ),
+legend("topright", pch=c(23,21,22),
+    pt.bg=c("gray31", "firebrick3", "royalblue3") ,
+    legend=c(expression('T'[0]), "pH 7.5", "pH 8.0" ),
     pt.cex=1.6, cex=0.8)
 
 dev.off()

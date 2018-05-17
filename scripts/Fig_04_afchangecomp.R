@@ -61,7 +61,7 @@ cor.test(d7_7_both, d7_8_both,
          conf.level = 0.95)
 
 
-tiff("~/urchin_af/figures/Fig_06_afchangecomp.tiff", height=100, width=200, units="mm", res=300)
+tiff("~/urchin_af/figures/Fig_04_afchangecomp.tiff", height=85, width=170, units="mm", res=300)
 par(mfrow = c(1, 2), mar=c(3, 3, 1.7, 1), mgp=c(3, 1, 0), las=0)
 plot(0,type='n', xlim=c(0,.39), ylim=c(0,.39),
     main="",
@@ -79,10 +79,10 @@ points(x=d7_8_both, y=d7_7_both, col=alpha("darkorchid4", 0.7),
 
 abline(0, 1, col="black", lty=2, lwd=2.2)
 
-axis(1, mgp=c(1.8, .2, 0), cex.axis=0.6,tcl=-0.2) # second is tick mark labels
-axis(2, mgp=c(1.8, .4, 0), cex.axis=0.6, tcl=-0.2)
-title(ylab=expression(paste(Delta," allele frequency pH 7.5")), line=1.5, cex.lab=0.7)
-title(xlab=expression(paste(Delta," allele frequency pH 8.0")), line=1.5, cex.lab=0.7)
+axis(1, mgp=c(1.8, .2, 0), cex.axis=0.7,tcl=-0.2) # second is tick mark labels
+axis(2, mgp=c(1.8, .4, 0), cex.axis=0.7, tcl=-0.2)
+title(ylab=expression(paste(Delta," allele frequency pH 7.5")), line=1.5, cex.lab=0.9)
+title(xlab=expression(paste(Delta," allele frequency pH 8.0")), line=1.5, cex.lab=0.9)
 
 legend("topleft", c("pH 7.5 selected",
                     "pH 8.0 selected",
@@ -90,7 +90,7 @@ legend("topleft", c("pH 7.5 selected",
     horiz = FALSE, inset = c(0, 0),
     col = c("firebrick3", "royalblue3","darkorchid4"),
     pt.bg = c("firebrick3", "royalblue3","darkorchid4"),
-    pt.cex=1, cex=0.7, pch=c(21,22,24))
+    pt.cex=1, cex=0.6, pch=c(21,22,24))
 
 
 mtext(text="A",
@@ -168,9 +168,10 @@ plot(density(0:1), ylim=c(0,4),xlim=c(0,1), lwd=0,
     cex.lab=1.1, cex.axis=1,
     xaxt="n",yaxt="n")
 
-axis(1, mgp=c(1.8, .2, 0), cex.axis=0.6,tcl=-0.2) # second is tick mark labels
-axis(2, mgp=c(1.8, .4, 0), cex.axis=0.6, tcl=-0.2)
-title(xlab="Starting allele frequency", line=1.5, cex.lab=0.7)
+axis(1, mgp=c(1.8, .2, 0), cex.axis=0.7,tcl=-0.2) # second is tick mark labels
+axis(2, mgp=c(1.8, .4, 0), cex.axis=0.7, tcl=-0.2)
+title(xlab="Starting allele frequency", line=1.5, cex.lab=0.9)
+title(ylab="Density", line=1.5, cex.lab=0.9)
 
 polygon(x=c(densities.qtiles$x,rev(densities.qtiles$x)),
     y=c(densities.qtiles$q05,rev(densities.qtiles$q95)),
@@ -188,8 +189,7 @@ abline(v=mean(snp.sel_both), lty=2, col= "darkorchid2", lwd=3)
 
 legend("topright", c("neutral", "pH 7.5: selected", "pH 8.0: selected", "Overlapping selected"),
     col=c("black", "firebrick3", "royalblue3", "darkorchid2"), lty=1,
-    cex=0.7, lwd=2)
-
+    cex=0.59, lwd=1.9)
 
 mtext(text="B",
         side=3, line=0,
