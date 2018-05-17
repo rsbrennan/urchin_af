@@ -16,8 +16,8 @@ GO annotations were retrived from ensembl on 2/18/18 and exported though biomart
 - SnpEff Version 4.3 build 2017-11-24
 - R version 3.4.3
     + pcadapt 3.0.4
-- VCFtools version 0.1.15 
-- LDx
+- VCFtools version 0.1.15
+- [LDx](https://sourceforge.net/p/ldx/wiki/Home/)
 - topGO version 2.22.0 
 - Python 2.7.5
 
