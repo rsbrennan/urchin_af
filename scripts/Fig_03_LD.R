@@ -152,10 +152,11 @@ group_by(bin) %>%
             q95 = quantile(ld, 0.975, na.rm=TRUE))
 
 
+
 tiff("~/urchin_af/figures/Fig_03_ld.tiff", height=85, width=85, units="mm", res=300)
 par(mfrow = c(1, 1), mar=c(3, 3, 1.7, 1), mgp=c(3, 1, 0), las=0)
 
-plot(0,type='n', xlim=c(0,200), ylim=c(0,0.4),
+plot(0,type='n', xlim=c(0,200), ylim=c(0,0.26),
     main="",
     ylab="",
     xlab="",
@@ -183,14 +184,14 @@ axis(2, mgp=c(2, .5, 0), cex.axis=0.7)
 title(xlab="Distance between SNPs in base pairs", line=2, cex.lab=0.9)
 title(ylab="Estimated Linkage Disequilibrium", line=2, cex.lab=0.9)
 
-legend("topright",
+legend("bottomleft",
     legend=c(expression('T'[0]),
             "pH 7.5: selected",
             "pH 7.5: neutral",
             "pH 8.0: selected",
             "pH 8.0: neutral"),
        col=c("black", "firebrick3", "firebrick3", "royalblue3", "royalblue3"),
-       lty=c(2,1,2,1,2), lwd=2.2, cex=0.8)
+       lty=c(2,1,2,1,2), lwd=2.2, cex=0.75, bty = "n")
 
 dev.off()
 
