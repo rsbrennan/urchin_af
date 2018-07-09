@@ -96,7 +96,7 @@ Supplemental Figures:
 - Figure S1: in `Fig_03_LD.R`
 - Figure S2: in `Fig_03_LD.R`
 - Figure S3: `Fig_S2_manhattan.R`
-- Figure S4: 
+- Figure S4: `05_balancing_sel.R` 
 - Figure S5: `Fig_S4_S5.R`
 - Figure S6: `Fig_S4_S5.R`
 
