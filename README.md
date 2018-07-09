@@ -2,11 +2,11 @@
 
 This repository holds scripts for the analysis of a purple sea urchin, Strongylocentrotus purpuratus, selection experiment.
 
-Original experiment was completed on ?? where 25 adult urchins were spawned and resulting embryos were exposed to low pH or control conditions. Pools of larvae sequenced to > 50x coverage to identify adaptive changes in allele frequency in response to low pH selection.
+Original experiment was completed on ?? where 25 adult urchins were spawned and resulting embryos were exposed to moderately low (pH 8.0) or extremely low (pH 7.5) pH conditions. Pools of larvae sequenced to > 50x coverage to identify adaptive changes in allele frequency in response to different degrees of low pH selection.
 
 ## data availability
 
-Sequence data: link coming soon.
+Sequence data: raw reads are available at NCBI SRA: BioProject ID: PRJNA479817
 
 GO annotations were retrived from ensembl on 2/18/18 and exported though biomart. This correponds to assembly Spur_3.1. http://metazoa.ensembl.org/Strongylocentrotus_purpuratus/Info/Index
 
