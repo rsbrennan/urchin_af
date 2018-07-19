@@ -7,12 +7,13 @@ library(qqman)
 
 
 # obtain allele freqs:
-
+## use pipe to execute bash command via R
 command1 <- "zcat ~/urchin_af/variants/urchin_final.vcf.gz | grep -v '^##' | cut -f 1-8 | sed 's/#CHROM/CHROM/g'"
 snp.info <- read.table(pipe(command1), header=TRUE)
 command2 <- "zcat ~/urchin_af/variants/urchin_final.vcf.gz | grep -v '^##' | cut -f 10-"
 snp <- read.table(pipe(command2), header=TRUE)
 
+# change annoying col names
 colnames(snp) <- gsub("OASV2_DNA_", "", colnames(snp))
 colnames(snp) <- gsub("S_", "", colnames(snp))
 colnames(snp) <- gsub("5_", "", colnames(snp))
@@ -34,6 +35,7 @@ for(i in 1:length(names(out.split))){
 #convert all to numeric
 dat <- data.frame(sapply(dat, function(x) as.numeric(as.character(x))))
 
+##################################
 #### calc AF for each rep
 dep.keep <- dat
 
@@ -55,9 +57,6 @@ for(i in 1:ncol(af)){
 }
 
 colnames(af) <- paste(pop, "_af", sep="")
-
-# calculate mean of each group
-#### calc AF for each rep
 
 # calculate mean of each group
 gp <- c( "D1_8", "D7_7", "D7_8")
@@ -99,28 +98,37 @@ mydata <- read.table("~/urchin_af/data/allele.freq.txt", header=TRUE)
 ## subset data to only include af measures
 dat <- mydata[,grep("_af", colnames(mydata))]
 
+
+#######################################################
 ####################
 ##
 ## Cochran–Mantel–Haenszel Test
 ##
 ####################
+#######################################################
 
 # cmh for pH 7.5 selection after 7 days, only include d1 8 ph as control
-pH7_selection_pval <-c()
+pH7_selection_pval <-c() # empty vector to save output
+
+# note that this loop is fairly slow and inefficient
 
 for(i in 1:nrow(mydata)){
 
+    # pull out counts of allele 1
     sub_ad <- mydata[i,grep("_DP1", colnames(mydata))]
+    # transform vector to dataframe
     sub_ad <- stack(sub_ad)
+    #add id col
     sub_ad$allele <- rep("ac1", nrow(sub_ad))
+    # pull out counts of allele 2
     sub_dp <- mydata[i,grep("_DP2", colnames(mydata))]
     sub_dp <- stack(sub_dp)
     sub_dp$allele <- rep("ac2", nrow(sub_dp))
     colnames(sub_dp) <- c("count", "ind", "allele")
     colnames(sub_ad) <- c("count", "ind", "allele")
-#   count <- sub_dp$depth - sub_ad$count
-#   sub_ac2 <- data.frame(count=count, ind=sub_dp$ind, allele=sub_dp$allele)
+    #make data frame with both alleles
     sub_all <- rbind(sub_ad, sub_dp)
+    # add ids
     sub_all$day <- substr(sub_all$ind, 1,2)
     sub_all$replicate <- substr(sub_all$ind, 6,7)
     sub_all$pH <- substr(sub_all$ind, 4,4)
@@ -131,21 +139,29 @@ for(i in 1:nrow(mydata)){
     sub_all$replicate <- ave(paste(sub_all$day, sub_all$allele, sep=":"),
             paste(sub_all$day, sub_all$allele, sep=":"), FUN=seq_along)
 
+    # make table for cmh
     Data.xtabs = xtabs(count ~ allele + day + replicate,
-                   data=sub_all)
+                data=sub_all)
+    # cmh test using counts for each allele
     test <- mantelhaen.test(Data.xtabs)
+
+    # add pvalue to output
     pH7_selection_pval[i] <- test$p.value
 
     if (i%%5000 == 0){print(i)}
-    #ftable(Data.xtabs)
 }
 
-pH7_selection_pval[which(is.na(pH7_selection_pval))] <- 1 # bc some are invariant
+pH7_selection_pval[which(is.na(pH7_selection_pval))] <- 1 # bc some are invariant due to removing the unused group
 
 print("D1-D7  pH7 cmh done")
 
-########
-# cmh for control selection, only include control ph indivs
+###############
+###
+# cmh for pH 8.0, moderate selection
+###
+##############
+
+# see above for annotated script
 
 pH8_selection_pval <-c()
 
@@ -174,14 +190,14 @@ for(i in 1:nrow(mydata)){
     pH8_selection_pval[i] <- test$p.value
 
     if (i%%5000 == 0){print(i)}
-    #ftable(Data.xtabs)
 }
 
 pH8_selection_pval[which(is.na(pH8_selection_pval))] <- 1 # bc some are invariant
 
 print("ph8 cmh done")
 
-######## append p values these to mydata ############
+
+######## append p values these to mydata dataframe  ############
 
 mydata$pH8_selection_pval <- pH8_selection_pval
 mydata$pH7_selection_pval <- pH7_selection_pval

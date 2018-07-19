@@ -8,8 +8,10 @@ cd ~/urchin_af/variants/
     #do the following bc error in location of perl library. this fixes it.
     export PERL5LIB=$PERL5LIB:~/bin/vcftools/src/perl
 
+#this does the actual concatenating
     ~/bin/vcftools/bin/vcf-concat $(ls -1 ~/urchin_af/variants/temp/*.vcf | perl -pe 's/\n/ /g')> ~/urchin_af/variants/tmp.vcf
 
+# then filter mean min depth and min avg depth. Plus biallelic.
         ~/bin/vcftools/bin/vcftools --vcf ~/urchin_af/variants/tmp.vcf \
         --maf 0.01 \
         --minQ 20 \

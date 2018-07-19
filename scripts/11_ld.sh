@@ -63,6 +63,9 @@ fi
 
 vcf_i=~/urchin_af/variants/urchin_final.vcf
 
+#######################
+# loop over samples
+#######################
 for rep in D1 D7_7 D7_8; do
 
 echo $rep

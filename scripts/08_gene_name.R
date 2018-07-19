@@ -5,10 +5,5 @@ g.nm <- read.csv("~/urchin_af/analysis/cmh.master.whl_old.txt", header=TRUE, sep
 
 dat$old_name <- g.nm$gene_name[match(dat$SNP_1, g.nm$SNP)]
 
-# lets also add control q val too
-cmh <- read.csv("~/urchin_af/analysis/cmh.out.txt", header=TRUE, sep="\t")
-
-dat$control_pval <- cmh$control_selection_qval[match(dat$SNP_1, cmh$SNP)]
-
 write.table(file = "~/urchin_af/analysis/cmh.gene_names.out", dat,
     col.names=TRUE, row.names=FALSE, quote=FALSE,sep="\t")

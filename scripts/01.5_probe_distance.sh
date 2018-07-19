@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# sort the probe bed file
+# this file contains all probes used to capture dna and make libraries
 sort -k1,1 -k2,2n /data/OASV2/RG_7601_Probe.extended.bed > ~/reference/urchin_probes.sorted.bed
 
 #bedfile from vcf

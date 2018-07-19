@@ -1,6 +1,8 @@
 
 ## 06_balancing_sel_permutation.R
 
+# running the permutation for allele freq distributions
+
 library(dplyr)
 library(reshape)
 library(ggplot2)
@@ -26,7 +28,6 @@ legend("topright", c("D1 pH8- all", "D7 pH 8-selected", "D7 pH 7-selected"), pch
 dev.off()
 
 
-
 ################################################
 ######
 ## permute to pull out false positives and compare sfs
@@ -34,24 +35,20 @@ dev.off()
 ################################################
 
 # permute samples. pull out "responsive" loci. calc summary stats
+# basically, randomly assigning samples to groups. calculating cmh, looking at af, etc. 
+
 # try to run in parallel
 
 library(foreach)
 library(doParallel)
 library(scales)
+
 #setup parallel backend to use many processors
 cores=detectCores()
 cl <- makeCluster(cores[1]-4) #not to overload your computer. This is setting up 10 different computing environments
 registerDoParallel(cl)
 clusterCall(cl, function() library(scales)) # need to load library for each node.
 clusterCall(cl, function() library(qvalue)) # need to load library for each node.
-
-#png("~/urchin_af/figures/maf_unfolded_permute.png", res=301, height=7, width=7, units="in")
-
-#plot(density(af_out), ylim=c(0,3), lwd=0,
- #   main="", xlab="allele frequency")
-
-#ks.out <- c()
 
 # this transposes the results
 comb <- function(...) {
@@ -69,6 +66,7 @@ my_results_par <- foreach(perm_rep = 1:500, .combine='comb', .multicombine=TRUE,
 
     DP1 <- mydata[,grep("_DP1", colnames(mydata))]
     DP2 <- mydata[,grep("_DP2", colnames(mydata))]
+    # mix up these samples
     shuf <- sample(seq(1:ncol(DP1)))
     DP1 <- DP1[,shuf]
     DP2 <- DP2[,shuf]
@@ -93,9 +91,6 @@ my_results_par <- foreach(perm_rep = 1:500, .combine='comb', .multicombine=TRUE,
         test <- mantelhaen.test(Data.xtabs)
         control_selection_pval[i] <- test$p.value
 
-        #if (i%%1000 == 0){print(i)}
-
-        #ftable(Data.xtabs)
     }
 
 # pull out sfs of sig results
@@ -107,6 +102,7 @@ pop <- colnames(out)
 af <- data.frame(matrix(ncol=ncol(out), nrow=nrow(out)))
 colnames(af) <- pop
 
+# calc af
 for(i in 1:8){
     #pull out pop lab
     pop_nm <- substr(pop[i],1,4)
@@ -179,16 +175,10 @@ control_selection_qval <- qvalue(control_selection_pval)$qvalues
 control_selection_qval[which(is.na(control_selection_qval))] <- 1 # bc some are invariant
 cut_off <- quantile(control_selection_qval, 0.015)
 
-# need to pull out only selected alleles
+# need to pull out only selected alleles, take top 0.015 quantile
 snp.sel <- af_out[which(control_selection_qval < cut_off)]
 
-# pad these with NA's so they're all the same legnth for the cbind
-#diff_len <- (6000-length(snp.sel_1))
-#snp.sel <- c(snp.sel_1, rep(NA,diff_len))
-
-
-# I think this might just add it to my_results_par
-
+# the following will add to output
 list(ks.test(snp.sel_80, snp.sel)$p.value,
     ks.test(snp.sel_75,snp.sel)$p.value,
     ks.test(snp.sel_both,snp.sel)$p.value,
@@ -205,6 +195,7 @@ write.table(my_results_par[[4]], file="~/urchin_af/analysis/permutation_af.txt",
 #stop cluster
 stopCluster(cl)
 
+# which comparisons from the ks test are sig different?
 length(which(my_results_par[[1]] < 0.05))
 length(which(my_results_par[[2]] < 0.05))
 length(which(my_results_par[[3]] < 0.05))
@@ -226,7 +217,6 @@ for (i in 1: ncol(my_results_par[[4]])){
 lines(density(snp.sel_75), col=alpha("firebrick3", 1), lwd=3)
 lines(density(snp.sel_80), col=alpha("royalblue3", 1), lwd=3)
 lines(density(snp.sel_both), col=alpha("darkorchid2", 1), lwd=3)
-#lines(density(avg_perm), col=alpha("darkgoldenrod3", 1), lwd=3, lty=2)
 
 abline(v=mean(avg_perm), lty=2, col= "black", lwd=3)
 abline(v=mean(snp.sel_75), lty=2, col= "firebrick3", lwd=3)

@@ -2,9 +2,9 @@
 # ~/reference/ensembl_goterms.txt were downloaded on 2/18/18
 
 # want to link spu from cmh.annotation.out to spu in ensembl_goterms.txt to get GO terms
-#### this should also let me
 # secondly, can pull down gene description from wiki gene
 
+# some of these are no longer necessary...
 import pandas as pd
 import numpy as np
 import gzip
@@ -16,13 +16,12 @@ import time
 
 # assign GO terms
 go_path = '/users/r/b/rbrennan/reference/ensembl_goterms.txt'
-#spu_path = '/users/r/b/rbrennan/reference/whl22.v1.0.tmap.gz'
 
-#make empty array to save output
+#make empty array to save output. This speeds things up compared to appending each iteration.
+# appending requires resaving entire array
 go_out = np.empty(shape=(75368,5), dtype = object)
 
-i=0 # start counter
-# 41495 rows
+i=0 # start counter. not necessary, but useful when trouble shooting
 
 # note that in the go terms, there are multiple rows for each spu if mnultiple GO terms are assigned
 
@@ -30,8 +29,8 @@ with open('/users/r/b/rbrennan/urchin_af/analysis/cmh.annotations.out') as maste
     header_line = next(master_file) # skip header row
     #start_time = time.time()
     for idx, line in enumerate(master_file):
-        tmp_snp = line.split("\t")[0]
-        tmp_spu = line.split("\t")[5]
+        tmp_snp = line.split("\t")[0] # pull out snp name
+        tmp_spu = line.split("\t")[5] # pull out sput
         tmp_go = ""
         tmp_short = ""
 
@@ -44,11 +43,11 @@ with open('/users/r/b/rbrennan/urchin_af/analysis/cmh.annotations.out') as maste
                     spu2 = tmp_spu.split("-")[1]
                     # match spu1
                     if spu1 == go_line.split("\t")[0]:
-                        if len(tmp_go) == 0:
+                        if len(tmp_go) == 0:  # if this is the first match, fill
                             tmp_go = go_line.split("\t")[6]
                         if len(tmp_short) == 0:
                             tmp_short = go_line.split("\t")[4]
-                        if len(tmp_go) > 0:
+                        if len(tmp_go) > 0: # if this isn't the first match, append.
                             tmp_go = tmp_go + ";" +  go_line.split("\t")[6]
                         if len(tmp_short) > 0:
                             tmp_short = go_line.split("\t")[4] + ";" + tmp_short
@@ -77,14 +76,11 @@ with open('/users/r/b/rbrennan/urchin_af/analysis/cmh.annotations.out') as maste
         tmp_short2 = ";".join(list(OrderedDict.fromkeys(tmp_short1)))
         tmp_go1 = tmp_go.split(";")
         tmp_go2 = ";".join(list(OrderedDict.fromkeys(tmp_go1)))
-        # I think that if no GO term will be blank... but double check
+        # if no GO term will be blank
         out_1 = tmp_snp + "\t" + tmp_spu + "\t" + tmp_short2 + "\t" + tmp_class + "\t" + tmp_go2
-        #go_out = np.vstack((go_out, out_1.split("\t")))
         go_out[idx]= out_1.split("\t")
         i=i+1
-        if i % 1000 == 0: print(i)
-        #if i % 1000 == 0: end_time2 = time.time()
-        #if i % 1000 == 0: print("total time taken for 1000 loops: ", end_time2 - start_time)
+        if i % 10000 == 0: print(i)
 
 
 # pull out common gene name ~/reference/annotation.build8/gene_info_table.txt

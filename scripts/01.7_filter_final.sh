@@ -1,5 +1,8 @@
 #!/bin/bash
 
+
+#removing all variants that are > 2kb from a probe.
+
 cd ~/urchin_af/variants/
 
 zcat ~/urchin_af/variants/urchin_filt2.vcf.gz | \

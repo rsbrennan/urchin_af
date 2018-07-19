@@ -1,3 +1,8 @@
+
+####
+# snpeff to assign function to variants
+####
+
 cd ~/bin/snpEff/data/Strongylocentrotus_purpuratus
 zcat snpEffectPredictor.bin | grep -v 'EMSPUG' | gzip > snpEffectPredictor.bin1
 mv snpEffectPredictor.bin oldannotation

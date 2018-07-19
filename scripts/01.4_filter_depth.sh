@@ -1,5 +1,7 @@
 #!/bin/bash
 
+
+# filter by max depth calculated in 01.3_filter.R
 cd ~/urchin_af/variants/
 
 zcat ~/urchin_af/variants/urchin_filt1.vcf.gz | \

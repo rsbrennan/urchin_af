@@ -5,48 +5,8 @@ library(MASS)
 
 dat <- read.table("~/urchin_af/variants/urchin_ann.vcf", stringsAsFactors=FALSE)
 
-# loop over entire data set. count up annotattions. Make sure I'm pulling out what I think I am
+# split annotations
 eff <- strsplit(as.character(dat$V8), split=",", fixed=TRUE)
-
-one=0
-two=0
-three=0
-four=0
-five=0
-six=0
-seven=0
-eight=0
-
-for (i in 1:length(eff)){
-    if(length(eff[[i]]) == 1){
-        one=one+1
-    }
-    if(length(eff[[i]]) == 2){
-        two=two+1
-    }
-    if(length(eff[[i]]) == 3){
-        three=three+1
-    }
-    if(length(eff[[i]]) == 4){
-        four=four+1
-    }
-    if(length(eff[[i]]) == 5){
-        five=five+1
-    }
-    if(length(eff[[i]]) == 6){
-        six=six+1
-    }
-    if(length(eff[[i]]) == 7){
-        seven=seven+1
-    }
-    if(length(eff[[i]]) == 8){
-        eight=eight+1
-    }
-}
-
-#sanity check
-(one+two+three+four+five+six+seven+eight) == nrow(dat)
-
 
 # it is possible that snps receive multiple annotations
 # I think in this case, it is best to take the most "severe"
@@ -146,6 +106,8 @@ new$class[which(new$Annotation == "missense_variant" |
     new$Annotation == "initiator_codon_variant"|
     new$Annotation == "3_prime_UTR_variant")] <- c("non-synonymous")
 
+
+# make data frame for plotting
 ens <- as.data.frame(matrix(ncol=3, nrow=4))
 colnames(ens) <- c("gff", "SNP_class", "count")
 ens$SNP_class <- c("intergenic", "intron", "synonymous", "non-synonymous")
@@ -446,6 +408,14 @@ geom_bar(stat="identity", color="black", position=position_dodge())+
   theme(legend.title=element_blank())
 
 library(ggpubr)
+
+
+#################
+##
+## figure S4
+##
+################
+
 
 png("~/urchin_af/figures/AF_categories_unfolded_bin.png", height=7, res=300, units="in", width=10)
 ggarrange(a, b, c, d, ncol=2, nrow=2, common.legend = TRUE, legend="bottom")
