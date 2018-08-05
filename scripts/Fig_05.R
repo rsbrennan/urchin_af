@@ -86,8 +86,8 @@ mtext(side=2,expression(paste(Delta, " allele frequency")), line=2.2, cex=0.8)
 mtext(side=2, expression("vs. T"[0]), line=1.4, cex=0.8)
 
 # add label
-mtext(text="A",
-        side=3, line=0.3,
+mtext(text=bquote(paste('(',italic('a'),')')),
+    side=3, line=0.3,
              cex=1.5,
             at=par("usr")[1]-0.2*diff(par("usr")[1:2]))
 
@@ -128,7 +128,7 @@ axis(2, mgp=c(1.8, .4, 0), cex.axis=0.7)
 
 
 # add label
-mtext(text="B",
+mtext(text=bquote(paste('(',italic('b'),')')),
         side=3, line=0,
              cex=1.5,
             at=par("usr")[1]-0.2*diff(par("usr")[1:2]))
