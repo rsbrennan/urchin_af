@@ -93,8 +93,8 @@ legend("topleft", c("pH 7.5 selected",
     pt.cex=1, cex=0.6, pch=c(21,22,24))
 
 
-mtext(text="A",
-        side=3, line=0,
+mtext(text=bquote(paste('(',italic('a'),')')),
+              side=3, line=0,
              cex=1.5,
             at=par("usr")[1]-0.14*diff(par("usr")[1:2]), outer=FALSE)
 
@@ -191,7 +191,7 @@ legend("topright", c("neutral", "pH 7.5: selected", "pH 8.0: selected", "Overlap
     col=c("black", "firebrick3", "royalblue3", "darkorchid2"), lty=1,
     cex=0.59, lwd=1.9)
 
-mtext(text="B",
+mtext(text=bquote(paste('(',italic('b'),')')),
         side=3, line=0,
              cex=1.5,
             at=par("usr")[1]-0.14*diff(par("usr")[1:2]), outer=FALSE)
