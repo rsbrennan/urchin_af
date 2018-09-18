@@ -27,7 +27,7 @@ Program versions can also be found in the scripts and/or in the associated manus
 
 ### Alignment, variant calling, filtering
 
-Get alignment, trimming script from april. 
+Alignment, trimming: `01.0_CleanAndMap.sh`  
 
 Call variants: `01.1_variant_call.sh`
 
