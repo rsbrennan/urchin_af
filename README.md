@@ -83,6 +83,9 @@ Call variants: `01.1_variant_call.sh`
         - `pi_popoolation.sh`
     - Then calc with R: 
         - `pi_popoolation.R`
+- Morphology
+    - `morphology.R`
+
 
 ### Figures
 
