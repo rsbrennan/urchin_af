@@ -120,42 +120,42 @@ af1_8 <- af.mean$D7_8_DP1 - af.mean$D1_8_DP1
 af2_8 <- af.mean$D7_8_DP2 - af.mean$D1_8_DP2
 af1_both <- rowMeans(cbind(af1_7, af1_8))
 
-af_out <- rep(NA, nrow(af.mean))
-
+af_out <- as.data.frame(matrix(nrow=nrow(af.mean), ncol=3))
+colnames(af_out) <- c("D1_8_af", "D7_7_af", "D7_8_af") # this is changed from original. want allele freq of all. 
 # mydata is in same order as af.mean. so can check sig cols. 
 
-for (i in 1:length(af_out)) {
+for (i in 1:nrow(af_out)) {
     if(mydata$pH7_sig[i] == TRUE & mydata$pH8_sig[i] == FALSE){
         if(af1_7[i] > 0){
-            af_out[i] <- af.mean$D1_8_DP1[i]
+            af_out[i,] <- af.mean[i, grep("DP1", colnames(af.mean))]
         }
         else{
-            af_out[i] <- af.mean$D1_8_DP2[i]
+            af_out[i,] <- af.mean[i, grep("DP2", colnames(af.mean))]
         }
 
     }
     if(mydata$pH8_sig[i] == TRUE & mydata$pH7_sig[i] == FALSE){
         if(af1_8[i] > 0){
-            af_out[i] <- af.mean$D1_8_DP1[i]
+            af_out[i,] <- af.mean[i, grep("DP1", colnames(af.mean))]
         }
         else{
-            af_out[i] <- af.mean$D1_8_DP2[i]
+            af_out[i,] <- af.mean[i, grep("DP2", colnames(af.mean))]
         }
     }
     if(mydata$pH8_sig[i] == FALSE & mydata$pH7_sig[i] == FALSE){
         if(af1_both[i] > 0){
-            af_out[i] <- af.mean$D1_8_DP1[i]
+            af_out[i,] <- af.mean[i, grep("DP1", colnames(af.mean))]
         }
         else{
-            af_out[i] <- af.mean$D1_8_DP2[i]
+            af_out[i,] <- af.mean[i, grep("DP2", colnames(af.mean))]
         }
     }
     if(mydata$pH8_sig[i] == TRUE & mydata$pH7_sig[i] == TRUE){
         if(af1_both[i] > 0){
-            af_out[i] <- af.mean$D1_8_DP1[i]
+            af_out[i,] <- af.mean[i, grep("DP1", colnames(af.mean))]
         }
         else{
-            af_out[i] <- af.mean$D1_8_DP2[i]
+            af_out[i,] <- af.mean[i, grep("DP2", colnames(af.mean))]
         }
     }
 }

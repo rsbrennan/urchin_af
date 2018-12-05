@@ -1,4 +1,5 @@
-brary(stringr)
+
+library(stringr)
 library(ggplot2)
 library(gridExtra)
 library(MASS)
@@ -9,7 +10,7 @@ dat <- read.table("~/urchin_af/variants/urchin_ann.vcf", stringsAsFactors=FALSE)
 eff <- strsplit(as.character(dat$V8), split=",", fixed=TRUE)
 
 # it is possible that snps receive multiple annotations
-# I think in this case, it is best to take the most "severe"
+# it is best to take the most "severe"
 # order is: HIGH MODERATE LOW MODIFIER
 
 ## from snpeff manual:
@@ -121,15 +122,6 @@ ens$proportion <- ens$count/sum(ens$count)
 
 dat_count <- ens
 
-pdf("~/urchin_af/figures/snp_class.pdf", height=7, width=7)
-
-a <- ggplot(data=dat_count, aes(x=SNP_class, y=proportion, group="SNP_class")) +
-geom_bar(stat="identity", color="black", position=position_dodge())+
-  theme_bw() + scale_fill_manual(values=c('gray50'))
-a
-
-dev.off()
-
 #############
 # split into selected and non
 #############
@@ -181,13 +173,27 @@ ens.neut$proportion <- ens.neut$count/sum(ens.neut$count)
 
 ens_all <- rbind(ens.neut, ens.sel_8, ens.sel_7)
 
-a <- ggplot(data=ens_all, aes(x=SNP_class, y=proportion, fill=gff)) +
-geom_bar(stat="identity", color="black", position=position_dodge())+
-  theme_bw() + scale_fill_manual(values=c('azure4','tomato3','royalblue4')) +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))+
-  theme(legend.title=element_blank())
-a
 
+## chi sq for props
+
+gen_7 <- c(537, 250)
+gen_8 <- c(401, 171)
+gen_all <- c(50686, 24677)
+
+Mat_7 <- matrix(c(gen_all, gen_7),
+                nrow=2,
+                byrow=TRUE)
+chisq.test(Mat_7,correct=TRUE)
+
+Mat_8 <-  matrix(c(gen_all, gen_8),
+                nrow=2,
+                byrow=TRUE)
+chisq.test(Mat_8,correct=TRUE)
+
+Mat_78 <-  matrix(c(gen_7, gen_8),
+                nrow=2,
+                byrow=TRUE)
+chisq.test(Mat_78,correct=TRUE)
 
 ###################################################
 ###################################################
@@ -276,25 +282,25 @@ intergen.all <- rbind(intergen.neut.merge, intergen.sel_7.merge,intergen.sel_8.m
 
 
 # unfolded
-ns.neut.merge$unfold_bin <- cut(ns.neut.merge$af_out, breaks=seq(0,1, 0.05))
-ns.sel_7.merge$unfold_bin <- cut(ns.sel_7.merge$af_out, breaks=seq(0,1, 0.05))
-ns.sel_8.merge$unfold_bin <- cut(ns.sel_8.merge$af_out, breaks=seq(0,1, 0.05))
-ns.all$unfold_bin <- cut(ns.all$af_out, breaks=seq(0,1, 0.05))
+ns.neut.merge$unfold_bin <- cut(ns.neut.merge$D1_8_af, breaks=seq(0,1, 0.05))
+ns.sel_7.merge$unfold_bin <- cut(ns.sel_7.merge$D1_8_af, breaks=seq(0,1, 0.05))
+ns.sel_8.merge$unfold_bin <- cut(ns.sel_8.merge$D1_8_af, breaks=seq(0,1, 0.05))
+ns.all$unfold_bin <- cut(ns.all$D1_8_af, breaks=seq(0,1, 0.05))
 
-syn.neut.merge$unfold_bin <- cut(syn.neut.merge$af_out, breaks=seq(0,1, 0.05))
-syn.sel_7.merge$unfold_bin <- cut(syn.sel_7.merge$af_out, breaks=seq(0,1, 0.05))
-syn.sel_8.merge$unfold_bin <- cut(syn.sel_8.merge$af_out, breaks=seq(0,1, 0.05))
-syn.all$unfold_bin <- cut(syn.all$af_out, breaks=seq(0,1, 0.05))
+syn.neut.merge$unfold_bin <- cut(syn.neut.merge$D1_8_af, breaks=seq(0,1, 0.05))
+syn.sel_7.merge$unfold_bin <- cut(syn.sel_7.merge$D1_8_af, breaks=seq(0,1, 0.05))
+syn.sel_8.merge$unfold_bin <- cut(syn.sel_8.merge$D1_8_af, breaks=seq(0,1, 0.05))
+syn.all$unfold_bin <- cut(syn.all$D1_8_af, breaks=seq(0,1, 0.05))
 
-intron.neut.merge$unfold_bin <- cut(intron.neut.merge$af_out, breaks=seq(0,1, 0.05))
-intron.sel_7.merge$unfold_bin <- cut(intron.sel_7.merge$af_out, breaks=seq(0,1, 0.05))
-intron.sel_8.merge$unfold_bin <- cut(intron.sel_8.merge$af_out, breaks=seq(0,1, 0.05))
-intron.all$unfold_bin <- cut(intron.all$af_out, breaks=seq(0,1, 0.05))
+intron.neut.merge$unfold_bin <- cut(intron.neut.merge$D1_8_af, breaks=seq(0,1, 0.05))
+intron.sel_7.merge$unfold_bin <- cut(intron.sel_7.merge$D1_8_af, breaks=seq(0,1, 0.05))
+intron.sel_8.merge$unfold_bin <- cut(intron.sel_8.merge$D1_8_af, breaks=seq(0,1, 0.05))
+intron.all$unfold_bin <- cut(intron.all$D1_8_af, breaks=seq(0,1, 0.05))
 
-intergen.neut.merge$unfold_bin <- cut(intergen.neut.merge$af_out, breaks=seq(0,1, 0.05))
-intergen.sel_7.merge$unfold_bin <- cut(intergen.sel_7.merge$af_out, breaks=seq(0,1, 0.05))
-intergen.sel_8.merge$unfold_bin <- cut(intergen.sel_8.merge$af_out, breaks=seq(0,1, 0.05))
-intergen.all$unfold_bin <- cut(intergen.all$af_out, breaks=seq(0,1, 0.05))
+intergen.neut.merge$unfold_bin <- cut(intergen.neut.merge$D1_8_af, breaks=seq(0,1, 0.05))
+intergen.sel_7.merge$unfold_bin <- cut(intergen.sel_7.merge$D1_8_af, breaks=seq(0,1, 0.05))
+intergen.sel_8.merge$unfold_bin <- cut(intergen.sel_8.merge$D1_8_af, breaks=seq(0,1, 0.05))
+intergen.all$unfold_bin <- cut(intergen.all$D1_8_af, breaks=seq(0,1, 0.05))
 
 ####### Unfolded #########
 
@@ -422,31 +428,11 @@ ggarrange(a, b, c, d, ncol=2, nrow=2, common.legend = TRUE, legend="bottom")
 dev.off()
 
 
-#extract legend
-#https://github.com/hadley/ggplot2/wiki/Share-a-legend-between-two-ggplot2-graphs
-g_legend<-function(a.gplot){
-  tmp <- ggplot_gtable(ggplot_build(a.gplot))
-  leg <- which(sapply(tmp$grobs, function(x) x$name) == "guide-box")
-  legend <- tmp$grobs[[leg]]
-  return(legend)}
-
-mylegend<-g_legend(a)
-
-p3 <- grid.arrange(arrangeGrob(a + theme(legend.position="none"),
-                         b + theme(legend.position="none"),
-                         c + theme(legend.position="none"),
-                         d + theme(legend.position="none"),
-                         nrow=2),
-             mylegend, nrow=2,heights=c(10, 1))
-
-png("~/urchin_af/figures/AF_categories_unfolded_bin.png", height=7, res=300, units="in", width=10)
-p3
-dev.off()
-
 ### Some stats
 
-ks.test(ns.sel_7.merge$af_out, ns.sel_8.merge$af_out)
-ks.test(syn.sel_7.merge$af_out, syn.sel_8.merge$af_out)
-ks.test(intron.sel_7.merge$af_out, intron.sel_8.merge$af_out)
-ks.test(intergen.sel_7.merge$af_out, intergen.sel_8.merge$af_out)
+ks.test(ns.sel_7.merge$D1_8_af, ns.sel_8.merge$D1_8_af)
+ks.test(syn.sel_7.merge$D1_8_af, syn.sel_8.merge$D1_8_af)
+ks.test(intron.sel_7.merge$D1_8_af, intron.sel_8.merge$D1_8_af)
+ks.test(intergen.sel_7.merge$D1_8_af, intergen.sel_8.merge$D1_8_af)
+
 

@@ -3,8 +3,6 @@ library(reshape)
 library(ggplot2)
 library(qvalue)
 library(scales)
-library(qqman)
-
 
 # obtain allele freqs:
 ## use pipe to execute bash command via R
@@ -147,7 +145,6 @@ for(i in 1:nrow(mydata)){
 
     # add pvalue to output
     pH7_selection_pval[i] <- test$p.value
-
     if (i%%5000 == 0){print(i)}
 }
 
@@ -202,18 +199,14 @@ print("ph8 cmh done")
 mydata$pH8_selection_pval <- pH8_selection_pval
 mydata$pH7_selection_pval <- pH7_selection_pval
 
-# convert to q value
-
-mydata$pH8_selection_qval <- qvalue(pH8_selection_pval)$qvalues
-mydata$pH7_selection_qval <- qvalue(pH7_selection_pval)$qvalues
-
-cut_off <- 0.001
+cut_off <- (0.05/9828)
 
 mydata$pH7_sig <- FALSE
-mydata$pH7_sig[which(mydata$pH7_selection_qval < cut_off)] <- TRUE
+mydata$pH7_sig[which(mydata$pH7_selection_pval < cut_off)] <- TRUE
 
 mydata$pH8_sig <- FALSE
-mydata$pH8_sig[which(mydata$pH8_selection_qval < cut_off)] <- TRUE
+mydata$pH8_sig[which(mydata$pH8_selection_pval < cut_off)] <- TRUE
+
 
 ################ save output ########################
 
