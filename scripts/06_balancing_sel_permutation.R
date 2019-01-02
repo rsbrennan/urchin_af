@@ -193,6 +193,11 @@ write.table(my_results_par[[1]], file="~/urchin_af/analysis/permutation_8_pval.t
 write.table(my_results_par[[3]], file="~/urchin_af/analysis/permutation_both_pval.txt",  col.names=TRUE, quote=FALSE, sep="\t")
 write.table(my_results_par[[4]], file="~/urchin_af/analysis/permutation_af.txt",  col.names=TRUE, quote=FALSE, sep="\t")
 
+write.table(my_results_par[[6]], file="~/urchin_af/analysis/permutation_wilcox_75_pval.txt",  col.names=TRUE, quote=FALSE, sep="\t")
+write.table(my_results_par[[5]], file="~/urchin_af/analysis/permutation_wilcox_8_pval.txt",  col.names=TRUE, quote=FALSE, sep="\t")
+write.table(my_results_par[[7]], file="~/urchin_af/analysis/permutation_wilcox_both_pval.txt",  col.names=TRUE, quote=FALSE, sep="\t")
+
+
 #stop cluster
 stopCluster(cl)
 
@@ -233,5 +238,4 @@ legend("topright", c("permuted", "pH 7.5: selected", "pH 8.0: selected", "Overla
     pch=19, col=c("black", "firebrick3", "royalblue3", "darkorchid2"), lty=NULL)
 
 dev.off()
-
 
