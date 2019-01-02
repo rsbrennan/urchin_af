@@ -1,29 +1,24 @@
 # Fig_05.R
 
-library(qqman)
-
-mydata <- read.table("~/urchin_af/analysis/cmh.out.txt", header=TRUE)
+mydata <- read.table("~/urchin_af/analysis/adaptive_allelefreq.txt", stringsAsFactors=FALSE, header=TRUE)
 mydata$CHR <- as.numeric(gsub("Scaffold", "", mydata$CHROM))
 mydata$SNP <- paste(mydata$CHROM, mydata$POS, sep=":")
 
-
-cut_off <- 0.001
+cut_off <- 0.05/(9828)
 
 #allele frequencies to plot panel
 #calc stderror of mean af estimates
 
 gps <- c("D1_7", "D7_7", "D7_8")
 
-af_dat <- mydata[,grep("_af", colnames(mydata))]
-
-mydata$D7_7_delta <- abs(mydata$D1_8_mean-mydata$D7_7_mean)
-mydata$D7_8_delta <- abs(mydata$D1_8_mean-mydata$D7_8_mean)
+mydata$D7_7_delta <- abs(mydata$D1_8_af-mydata$D7_7_af)
+mydata$D7_8_delta <- abs(mydata$D1_8_af-mydata$D7_8_af)
 
 new.dat <- subset(mydata, CHR > 541 & CHR < 543)
 new.dat <- subset(new.dat, POS > 34350 & POS < 34510)
 
 d=data.frame(CHR=new.dat$CHR, BP=new.dat$POS,
-            P=new.dat$pH7_selection_qval, P_8= new.dat$pH8_selection_qval,
+            P=new.dat$pH7_selection_pval, P_8= new.dat$pH8_selection_pval,
             SNP=new.dat$SNP,
             D7_7_delta = new.dat$D7_7_delta, D7_8_delta=new.dat$D7_8_delta)
 
@@ -65,7 +60,7 @@ tiff("~/urchin_af/figures/Fig_05.tiff", res=300, height=109, width=85, units="mm
 
 par(mfrow = c(2, 1), mar=c(1, 4, 3, 1), mgp=c(3, 1, 0), las=0)
 
-plot(0,type='n', xlim=c(34350,34510), ylim=c(0,.2),
+plot(0,type='n', xlim=c(34350,34510), ylim=c(0,.17),
     main="",
     ylab="",
     xlab="",
@@ -103,14 +98,15 @@ legend("top",c("pH 7.5", "pH 8.0"), pch = c(21,22),
 ###########
 par(mar=c(3, 4, 1, 1), mgp=c(3, 1, 0), las=0)
 
-plot(0,type='n', xlim=c(34350,34510), ylim=c(0,4.3),
+plot(0,type='n', xlim=c(34350,34510), ylim=c(0,7),
     main="",
     ylab="",
     xlab="",
     cex.lab=1, cex.axis=0.7,
     xaxt="n",yaxt="n")
 axis(1, mgp=c(1.8, .2, 0), cex.axis=0.7,tcl=-0.2) # second is tick mark labels
-axis(2, mgp=c(1.8, .4, 0), cex.axis=0.7, tcl=-0.2)
+ytick <- seq(0, 7, by=2)
+axis(2, mgp=c(1.8, .4, 0), at=ytick, cex.axis=0.7, tcl=-0.2)
 
 abline(h=-log10(cut_off), lty=2, col="black", lwd=1.5)
 
@@ -121,11 +117,9 @@ lines((d$pos), -log10(d$P_8), col="royalblue3")
 points(d$pos, -log10(d$P_8), col="black",
     bg = "royalblue3", cex=1, pch=22)
 
-title(ylab=expression(-log[10](italic(q))), line=2, cex.lab=0.8)
+title(ylab=expression(-log[10](italic(p))), line=2, cex.lab=0.8)
 
 title(xlab="Scaffold542: position in BP", line=1.9, cex.lab=0.8)
-axis(2, mgp=c(1.8, .4, 0), cex.axis=0.7)
-
 
 # add label
 mtext(text=bquote(paste('(',italic('b'),')')),
