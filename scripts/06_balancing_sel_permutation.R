@@ -11,15 +11,15 @@ library(scales)
 
 mydata <- read.table("~/urchin_af/analysis/adaptive_allelefreq.txt", stringsAsFactors=FALSE, header=TRUE)
 
-cut_off <- 0.001
+cut_off <- 0.05/(9828)
 # need to pull out only selected alleles
-snp.sel_75 <- mydata$af_out[which(mydata$pH7_selection_qval < cut_off & mydata$pH8_selection_qval >= cut_off)]
-snp.sel_80 <- mydata$af_out[which(mydata$pH8_selection_qval < cut_off & mydata$pH7_selection_qval >= cut_off)]
-snp.sel_both <- mydata$af_out[which(mydata$pH8_selection_qval < cut_off & mydata$pH7_selection_qval < cut_off)]
+snp.sel_75 <- mydata$D1_8_af[which(mydata$pH7_selection_pval < cut_off & mydata$pH8_selection_pval >= cut_off)]
+snp.sel_80 <- mydata$D1_8_af[which(mydata$pH8_selection_pval < cut_off & mydata$pH7_selection_pval >= cut_off)]
+snp.sel_both <- mydata$D1_8_af[which(mydata$pH8_selection_pval < cut_off & mydata$pH7_selection_pval < cut_off)]
 
 png("~/urchin_af/figures/maf_unfolded_hist.png", res=300, height=7, width=7, units="in")
 par(mfrow = c(1, 1))
-hist(mydata$af_out, freq=FALSE, ylim=c(0,6), col=alpha("black", alpha = 0.6), breaks=50,
+hist(mydata$D1_8_af, freq=FALSE, ylim=c(0,6), col=alpha("black", alpha = 0.6), breaks=50,
     main="Unfolded MAF", xlab="allele frequency")
 hist(snp.sel_80, freq=FALSE, add=T, col=alpha("royalblue3", alpha = 0.4), breaks=50)
 hist(snp.sel_75, freq=FALSE, add=T, col=alpha("firebrick3", alpha = 0.4), breaks=50)
@@ -35,7 +35,7 @@ dev.off()
 ################################################
 
 # permute samples. pull out "responsive" loci. calc summary stats
-# basically, randomly assigning samples to groups. calculating cmh, looking at af, etc. 
+# basically, randomly assigning samples to groups. calculating cmh, looking at af, etc.
 
 # try to run in parallel
 
@@ -45,7 +45,7 @@ library(scales)
 
 #setup parallel backend to use many processors
 cores=detectCores()
-cl <- makeCluster(cores[1]-4) #not to overload your computer. This is setting up 10 different computing environments
+cl <- makeCluster(8) #not to overload your computer. This is setting up 10 different computing environments
 registerDoParallel(cl)
 clusterCall(cl, function() library(scales)) # need to load library for each node.
 clusterCall(cl, function() library(qvalue)) # need to load library for each node.
@@ -60,7 +60,7 @@ my_results_par <- foreach(perm_rep = 1:500, .combine='comb', .multicombine=TRUE,
     {
 #    sink("~/monitor.txt",append=TRUE)
     cat(paste("Starting iteration",perm_rep,"\n"),
-       file="~/log.monitor.txt", append=TRUE)
+       file="~/log.balancingsel.txt", append=TRUE)
 
    control_selection_pval <- c()
 
@@ -95,7 +95,6 @@ my_results_par <- foreach(perm_rep = 1:500, .combine='comb', .multicombine=TRUE,
 
 # pull out sfs of sig results
 
-cut_off <- 0.001
 out <- cbind(dp1.sub,dp2.sub )
 pop <- colnames(out)
 
@@ -171,21 +170,23 @@ for (i in 1:nrow(af)) {
     }
 }
 
-control_selection_qval <- qvalue(control_selection_pval)$qvalues
-control_selection_qval[which(is.na(control_selection_qval))] <- 1 # bc some are invariant
-cut_off <- quantile(control_selection_qval, 0.015)
+control_selection_pval[which(is.na(control_selection_pval))] <- 1 # bc some are invariant
+cut_off <- quantile(control_selection_pval, 0.01)
 
 # need to pull out only selected alleles, take top 0.015 quantile
-snp.sel <- af_out[which(control_selection_qval < cut_off)]
+snp.sel <- af_out[which(control_selection_pval < cut_off)]
 
 # the following will add to output
-list(ks.test(snp.sel_80, snp.sel)$p.value,
-    ks.test(snp.sel_75,snp.sel)$p.value,
-    ks.test(snp.sel_both,snp.sel)$p.value,
-    snp.sel)
+list(ks.test(snp.sel_80, snp.sel, alternative="greater")$p.value,
+    ks.test(snp.sel_75,snp.sel, alternative="greater")$p.value,
+    ks.test(snp.sel_both,snp.sel, alternative="greater")$p.value,
+    snp.sel,
+    wilcox.test(snp.sel_80, snp.sel, alternative="l", correct=TRUE)$p.value,
+    wilcox.test(snp.sel_75, snp.sel, alternative="l", correct=TRUE)$p.value,
+    wilcox.test(snp.sel_both,snp.sel, alternative="l", correct=TRUE)$p.value
+)
 
 }
-
 
 write.table(my_results_par[[2]], file="~/urchin_af/analysis/permutation_75_pval.txt",  col.names=TRUE, quote=FALSE, sep="\t")
 write.table(my_results_par[[1]], file="~/urchin_af/analysis/permutation_8_pval.txt",  col.names=TRUE, quote=FALSE, sep="\t")
@@ -196,15 +197,20 @@ write.table(my_results_par[[4]], file="~/urchin_af/analysis/permutation_af.txt",
 stopCluster(cl)
 
 # which comparisons from the ks test are sig different?
-length(which(my_results_par[[1]] < 0.05))
-length(which(my_results_par[[2]] < 0.05))
-length(which(my_results_par[[3]] < 0.05))
+length(which(my_results_par[[1]] < 0.05)) # ks, 8.0 vs perm
+# 491
+length(which(my_results_par[[2]] < 0.05)) # ks, 7.5 vs perm
+#493
+length(which(my_results_par[[3]] < 0.05)) # ks, both vs perm
+# 412
+length(which(my_results_par[[5]] < 0.05)) # wilcox, 8.0 vs perm
+# 482
+length(which(my_results_par[[6]] < 0.05)) # wilcox, 7.5 vs perm
+# 494
+length(which(my_results_par[[7]] < 0.05)) # wilcox, both vs perm
+# 409
 
-#colSums(is.na(my_results_par[[4]]))
-# 17/1000 > 0.05.
-
-
-png("~/urchin_af/figures/maf_unfolded_permute.png", res=301, height=7, width=7, units="in")
+png("~/urchin_af/figures/maf_unfolded_permute.png", res=300, height=7, width=7, units="in")
 
 plot(density(0:1), ylim=c(0,3),xlim=c(0,1), lwd=0,
     main="", xlab="allele frequency")
