@@ -223,3 +223,35 @@ mtext(text=bquote(paste('(',italic('b'),')')),
             at=par("usr")[1]-0.14*diff(par("usr")[1:2]), outer=FALSE)
 
 dev.off()
+
+
+# violin plot
+
+d7_8_s8_in <- data.frame(af=d7_8_s8, id=rep("pH 8.0 \nselected", length(d7_8_s8)))
+d7_7_s7_in <- data.frame(af=d7_7_s7, id=rep("pH 7.5 \nselected", length(d7_7_s7)))
+d7_8_both_in <- data.frame(af=d7_8_both, id=rep("pH 8.0 \noverlapping", length(d7_8_both)))
+d7_7_both_in <- data.frame(af=d7_7_both, id=rep("pH 7.5 \noverlapping", length(d7_7_both)))
+d7_7_neut <- data.frame(af=neut_7, id=rep("pH 7.5 \nneutral", length(neut_7)))
+d7_8_neut <- data.frame(af=neut_8, id=rep("pH 8.0 \nneutral", length(neut_8)))
+
+
+new <- rbind(d7_8_neut,d7_8_s8_in,d7_8_both_in, d7_7_neut, d7_7_s7_in, d7_7_both_in)
+levels(new$id) <- gsub("overlapping ", "overlapping\n",levels(new$id))
+
+png("~/urchin_af/figures/violin.png", height=95, width=95, units="mm", res=300)
+par(mfrow = c(1, 1), mar=c(3, 3, 1.7, 1), mgp=c(3, 1, 0), las=0)
+ggplot(new, aes(factor(id), af, fill=id) ) + 
+#geom_jitter(height = 0, width = 0.2, alpha = 0.4, size=1)+ 
+geom_violin(alpha = 0.8, draw_quantiles = c(0.5))+
+theme_bw() +
+theme(legend.position ="none")+
+xlab("") + ylab("Change in allele frequency")+
+scale_fill_manual(values=c("gray40","royalblue3","darkorchid4", 
+                    "gray40", "firebrick3", "darkorchid4"))+
+#scale_color_manual(values=c("royalblue3", "firebrick3","royalblue3", "firebrick3", "darkorchid4", "darkorchid4"))+
+theme(axis.text.x = element_text(angle = 45, hjust = 1))+ 
+theme(axis.title.y = element_text(size = rel(0.9)))+
+theme(plot.margin = unit(c(5.5,5.5,0.5,5.5), "pt"))
+
+dev.off()
+

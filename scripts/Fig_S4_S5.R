@@ -1,4 +1,4 @@
-### Fig S4
+### Fig S5, S6
 
 # permutation results
 # checking for bias in CMH stat
@@ -13,16 +13,11 @@ library(ggplot2)
 
 mydata <- read.table("~/urchin_af/analysis/adaptive_allelefreq.txt", stringsAsFactors=FALSE, header=TRUE)
 perm_dat <- read.table("~/urchin_af/analysis/permutation_af.txt", stringsAsFactors=FALSE, header=TRUE)
-cut_off <- 0.001
+cut_off <- (0.05/9828)
 # need to pull out only selected alleles
-snp.sel_75 <- mydata$af_out[which(mydata$pH7_selection_qval < cut_off & mydata$pH8_selection_qval >= cut_off)]
-snp.sel_80 <- mydata$af_out[which(mydata$pH8_selection_qval < cut_off & mydata$pH7_selection_qval >= cut_off)]
-snp.sel_both <- mydata$af_out[which(mydata$pH8_selection_qval < cut_off & mydata$pH7_selection_qval < cut_off)]
-
-png("~/urchin_af/figures/Fig_S4_cmhperm.png", height=100, width=200, units="mm", res=300)
-
-par(mfrow = c(1, 2), mar=c(3, 3, 1.7, 1), mgp=c(3, 1, 0), las=0)
-
+snp.sel_75 <- mydata$D1_8_af[which(mydata$pH7_selection_pval < cut_off & mydata$pH8_selection_pval >= cut_off)]
+snp.sel_80 <- mydata$D1_8_af[which(mydata$pH8_selection_pval < cut_off & mydata$pH7_selection_pval >= cut_off)]
+snp.sel_both <- mydata$D1_8_af[which(mydata$pH8_selection_pval < cut_off & mydata$pH7_selection_pval < cut_off)]
 
 ######
 ##
@@ -32,47 +27,9 @@ par(mfrow = c(1, 2), mar=c(3, 3, 1.7, 1), mgp=c(3, 1, 0), las=0)
 
 # read in data from permutation in 06_balancing_sel_permutation.R
 
-plot(density(0:1), ylim=c(0,4),xlim=c(0,1), lwd=0,
-    main="",
-    ylab="",
-    xlab="",
-    cex.lab=1.1, cex.axis=1,
-    xaxt="n",yaxt="n")
-
-axis(1, mgp=c(1.8, .2, 0), cex.axis=0.7,tcl=-0.2) # second is tick mark labels
-axis(2, mgp=c(1.8, .4, 0), cex.axis=0.7, tcl=-0.2)
-title(ylab="Density", line=1.5, cex.lab=1)
-title(xlab="Starting allele frequency", line=1.5, cex.lab=1)
-
-avg_perm <- c()
-for (i in 1: ncol(perm_dat)){
-    lines(density(unlist(perm_dat[,i]),na.rm=TRUE, bw=0.05), col=alpha("black", 0.08), lwd=1)
-    avg_perm <- c(avg_perm, unlist(perm_dat[,i]))
-}
-
-lines(density(snp.sel_75, bw=0.05), col=alpha("firebrick3", 1), lwd=3)
-lines(density(snp.sel_80, bw=0.05), col=alpha("royalblue3", 1), lwd=3)
-lines(density(snp.sel_both, bw=0.05), col=alpha("darkorchid2", 1), lwd=3)
-#lines(density(avg_perm), col=alpha("darkgoldenrod3", 1), lwd=3, lty=2)
-
-#abline(v=mean(avg_perm), lty=2, col= "black", lwd=3)
-#abline(v=mean(snp.sel_75), lty=2, col= "firebrick3", lwd=3)
-#abline(v=mean(snp.sel_80), lty=2, col= "royalblue3", lwd=3)
-#abline(v=mean(snp.sel_both), lty=2, col= "darkorchid2", lwd=3)
-
-legend("topright", c("permuted", "pH 7.5: selected", "pH 8.0: selected", "Overlapping selected"),
-    col=c("black", "firebrick3", "royalblue3", "darkorchid2"), lty=1,
-    cex=0.8, lwd=2)
-
-
-mtext(text="A",
-        side=3, line=0,
-             cex=1.5,
-            at=par("usr")[1]-0.14*diff(par("usr")[1:2]), outer=FALSE)
-
 ## plot CI
 
-dat.bs <- data.frame(CHROM = mydata$CHROM, POS = mydata$POS, af_out = mydata$af_out)
+dat.bs <- data.frame(CHROM = mydata$CHROM, POS = mydata$POS, af_out = mydata$D1_8_af)
 
 bs <- read.table("~/urchin_af/analysis/permutation_af.txt")
 
@@ -99,6 +56,10 @@ for (i in 1: ncol(bs)){
     avg_perm <- c(avg_perm, bs[,i])
 }
 
+png("~/urchin_af/figures/Fig_S4_cmhperm.png", height=100, width=100, units="mm", res=300)
+
+par(mfrow = c(1, 1), mar=c(3, 3, 1.7, 1), mgp=c(3, 1, 0), las=0)
+
 plot(density(0:1), ylim=c(0,4),xlim=c(0,1), lwd=0,
     main="",
     ylab="",
@@ -109,33 +70,66 @@ plot(density(0:1), ylim=c(0,4),xlim=c(0,1), lwd=0,
 axis(1, mgp=c(1.8, .2, 0), cex.axis=0.7,tcl=-0.2) # second is tick mark labels
 axis(2, mgp=c(1.8, .4, 0), cex.axis=0.7, tcl=-0.2)
 title(xlab="Starting allele frequency", line=1.5, cex.lab=1)
+title(ylab="Density", line=1.5, cex.lab=1)
 
 polygon(x=c(densities.qtiles$x,rev(densities.qtiles$x)),
     y=c(densities.qtiles$q05,rev(densities.qtiles$q95)),
     col=alpha("black", alpha=0.1),border=NA)
 
 lines(densities.qtiles$x,densities.qtiles$q50, col="black", lwd=3 )
-#lines(density(mydata$af_out), col=alpha("black", 1), lwd=3)
+#lines(density(mydata$D1_8_af), col=alpha("black", 1), lwd=3)
 lines(density(snp.sel_75, bw=0.05), col=alpha("firebrick3", 1), lwd=3)
 lines(density(snp.sel_80,bw=0.05), col=alpha("royalblue3", 1), lwd=3)
 lines(density(snp.sel_both,bw=0.05), col=alpha("darkorchid2", 1), lwd=3)
-#lines(density(avg_perm), col=alpha("darkgoldenrod3", 1), lwd=3, lty=2)
-
-#abline(v=mean(avg_perm), lty=2, col= "black", lwd=3)
-#abline(v=mean(snp.sel_75), lty=2, col= "firebrick3", lwd=3)
-#abline(v=mean(snp.sel_80), lty=2, col= "royalblue3", lwd=3)
-#abline(v=mean(snp.sel_both), lty=2, col= "darkorchid2", lwd=3)
 
 legend("topright", c("permuted", "pH 7.5: selected", "pH 8.0: selected", "Overlapping selected"),
     col=c("black", "firebrick3", "royalblue3", "darkorchid2"), lty=1,
     cex=0.8, lwd=2)
 
-mtext(text="B",
-        side=3, line=0,
-             cex=1.5,
-            at=par("usr")[1]-0.14*diff(par("usr")[1:2]), outer=FALSE)
 dev.off()
 
+
+# not longer using, individual lines from perm:
+
+
+#plot(density(0:1), ylim=c(0,4),xlim=c(0,1), lwd=0,
+#    main="",
+#    ylab="",
+#    xlab="",
+#    cex.lab=1.1, cex.axis=1,
+#    xaxt="n",yaxt="n")
+#
+#axis(1, mgp=c(1.8, .2, 0), cex.axis=0.7,tcl=-0.2) # second is tick mark labels
+#axis(2, mgp=c(1.8, .4, 0), cex.axis=0.7, tcl=-0.2)
+#title(ylab="Density", line=1.5, cex.lab=1)
+#title(xlab="Starting allele frequency", line=1.5, cex.lab=1)
+#
+#avg_perm <- c()
+#for (i in 1: ncol(perm_dat)){
+#    lines(density(unlist(perm_dat[,i]),na.rm=TRUE, bw=0.05), col=alpha("black", 0.08), lwd=1)
+#    avg_perm <- c(avg_perm, unlist(perm_dat[,i]))
+#}
+#
+#lines(density(snp.sel_75, bw=0.05), col=alpha("firebrick3", 1), lwd=3)
+#lines(density(snp.sel_80, bw=0.05), col=alpha("royalblue3", 1), lwd=3)
+#lines(density(snp.sel_both, bw=0.05), col=alpha("darkorchid2", 1), lwd=3)
+##lines(density(avg_perm), col=alpha("darkgoldenrod3", 1), lwd=3, lty=2)
+#
+##abline(v=mean(avg_perm), lty=2, col= "black", lwd=3)
+##abline(v=mean(snp.sel_75), lty=2, col= "firebrick3", lwd=3)
+##abline(v=mean(snp.sel_80), lty=2, col= "royalblue3", lwd=3)
+##abline(v=mean(snp.sel_both), lty=2, col= "darkorchid2", lwd=3)
+#
+#legend("topright", c("permuted", "pH 7.5: selected", "pH 8.0: selected", "Overlapping selected"),
+#    col=c("black", "firebrick3", "royalblue3", "darkorchid2"), lty=1,
+#    cex=0.8, lwd=2)
+#
+#
+#mtext(text="A",
+#        side=3, line=0,
+#             cex=1.5,
+#            at=par("usr")[1]-0.14*diff(par("usr")[1:2]), outer=FALSE)
+#
 
 ##################################################
 ##### Fig S5
@@ -144,7 +138,7 @@ dev.off()
 # all lines of samps from genome wide maf
 # hist of MAF
 
-all_bin <- cut(mydata$af_out, breaks=seq(0,1, 0.05))
+all_bin <- cut(mydata$D1_8_af, breaks=seq(0,1, 0.05))
 snp.sel_80_bin <- cut(snp.sel_80, breaks=seq(0,1, 0.05))
 snp.sel_75_bin <- cut(snp.sel_75, breaks=seq(0,1, 0.05))
 snp.sel_both_bin <- cut(snp.sel_both, breaks=seq(0,1, 0.05))
@@ -226,7 +220,7 @@ nsamp <- length(snp.sel_75)
 bs <- matrix(nrow=nsamp, ncol=nrep)
 avg_rep <- c()
 for(i in 1:nrep){
-    bs[,i] <- sample(mydata$af_out, size=nsamp, replace=FALSE)
+    bs[,i] <- sample(mydata$D1_8_af, size=nsamp, replace=FALSE)
     avg_rep <- c(avg_rep, bs[,i])
 }
 
@@ -262,12 +256,6 @@ for (i in 1: ncol(bs)){
 lines(density(snp.sel_75, bw=0.05), col=alpha("firebrick3", 1), lwd=3)
 lines(density(snp.sel_80,bw=0.05), col=alpha("royalblue3", 1), lwd=3)
 lines(density(snp.sel_both,bw=0.05), col=alpha("darkorchid2", 1), lwd=3)
-#lines(density(avg_perm), col=alpha("darkgoldenrod3", 1), lwd=3, lty=2)
-
-#abline(v=mean(avg_perm), lty=2, col= "black", lwd=3)
-#abline(v=mean(snp.sel_75), lty=2, col= "firebrick3", lwd=3)
-#abline(v=mean(snp.sel_80), lty=2, col= "royalblue3", lwd=3)
-#abline(v=mean(snp.sel_both), lty=2, col= "darkorchid2", lwd=3)
 
 legend("topright", c("All variants", "pH 7.5: selected", "pH 8.0: selected", "Overlapping selected"),
     col=c("black", "firebrick3", "royalblue3", "darkorchid2"), 
