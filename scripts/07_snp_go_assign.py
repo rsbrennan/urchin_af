@@ -121,19 +121,20 @@ for idx, go_line in enumerate(go_out):
             if tmp_snp == go_line[0]:
                 tmp_chr = sig_line.split("\t")[0]
                 tmp_pos = sig_line.split("\t")[1]
-                tmp_ph7_qval = sig_line.split("\t")[56]
-                tmp_ph8_qval = sig_line.split("\t")[55]
-                tmp_sig_ph7 = sig_line.split("\t")[57].split("\n")[0]
-                tmp_sig_ph8 = sig_line.split("\t")[58].split("\n")[0]
+                tmp_ph7_pval = sig_line.split("\t")[54]
+                tmp_ph8_pval = sig_line.split("\t")[53]
+                tmp_sig_ph7 = sig_line.split("\t")[55].split("\n")[0]
+                tmp_sig_ph8 = sig_line.split("\t")[56].split("\n")[0]
                 tmp_snpnm = tmp_chr + ":" + tmp_pos
-    out_1 = tmp_chr + "\t" + tmp_pos + "\t" + tmp_snpnm + "\t" + tmp_ph7_qval + "\t" + tmp_ph8_qval + "\t" +  tmp_sig_ph7 + "\t" + tmp_sig_ph8
+    out_1 = tmp_chr + "\t" + tmp_pos + "\t" + tmp_snpnm + "\t" + tmp_ph7_pval + "\t" + tmp_ph8_pval + "\t" +  tmp_sig_ph7 + "\t" + tmp_sig_ph8
     sig_out[idx]= out_1.split("\t")
     i=i+1
     if i % 1000 == 0: print(i)
 
+
 # combine and save all
 out_1 = np.column_stack((sig_out, nm_out, go_out))
-head = "CHR" + "\t" + "POS" + "\t" + "SNP_1" + "\t" + "qval_pH75" + "\t" + "qval_pH80" + "\t" + "sig_pH75"+ "\t" + "sig_pH80" + "\t" + "SPU_1" + "\t" + "description" + "\t" + "SNP_2"  "\t" + "SPU_2"  + "\t" + "short_name" + "\t" + "class" + "\t" + "GO_term"
+head = "CHR" + "\t" + "POS" + "\t" + "SNP_1" + "\t" + "pval_pH75" + "\t" + "pval_pH80" + "\t" + "sig_pH75"+ "\t" + "sig_pH80" + "\t" + "SPU_1" + "\t" + "description" + "\t" + "SNP_2"  "\t" + "SPU_2"  + "\t" + "short_name" + "\t" + "class" + "\t" + "GO_term"
 head = head.split("\t")
 out_final = np.vstack((head, out_1))
 np.savetxt('/users/r/b/rbrennan/urchin_af/analysis/cmh.master.out', out_final,fmt='%5s', delimiter='\t')
