@@ -229,10 +229,10 @@ dev.off()
 
 d7_8_s8_in <- data.frame(af=d7_8_s8, id=rep("pH 8.0 \nselected", length(d7_8_s8)))
 d7_7_s7_in <- data.frame(af=d7_7_s7, id=rep("pH 7.5 \nselected", length(d7_7_s7)))
-d7_8_both_in <- data.frame(af=d7_8_both, id=rep("pH 8.0 \noverlapping", length(d7_8_both)))
-d7_7_both_in <- data.frame(af=d7_7_both, id=rep("pH 7.5 \noverlapping", length(d7_7_both)))
-d7_7_neut <- data.frame(af=neut_7, id=rep("pH 7.5 \nneutral", length(neut_7)))
-d7_8_neut <- data.frame(af=neut_8, id=rep("pH 8.0 \nneutral", length(neut_8)))
+d7_8_both_in <- data.frame(af=(d7_8_both), id=rep("pH 8.0 \noverlapping", length(d7_8_both)))
+d7_7_both_in <- data.frame(af=(d7_7_both), id=rep("pH 7.5 \noverlapping", length(d7_7_both)))
+d7_7_neut <- data.frame(af=abs(d7_7_all), id=rep("pH 7.5 \nneutral", length(d7_7_all)))
+d7_8_neut <- data.frame(af=abs(d7_8_all), id=rep("pH 8.0 \nneutral", length(d7_8_all)))
 
 
 new <- rbind(d7_8_neut,d7_8_s8_in,d7_8_both_in, d7_7_neut, d7_7_s7_in, d7_7_both_in)

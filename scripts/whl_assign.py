@@ -1,3 +1,5 @@
+# whl_assign.py
+
 import pandas as pd
 import numpy as np
 import gzip
@@ -5,14 +7,7 @@ import csv
 import itertools
 import re
 from collections import OrderedDict
-import time
 
-# assign sig or not:
-#with open('/users/r/b/rbrennan/urchin_af/analysis/cmh.out.sorted.txt') as inf:
-#    reader = csv.reader(inf, delimiter="\t")
-#    sig_col = list(zip(*reader))[78]
-
-#sig_col = sig_col[1:]
 # assign GO terms
 filepath = '/users/r/b/rbrennan/reference/blast2go-whl.nospace.txt.gz'
 spu_path = '/users/r/b/rbrennan/reference/whl22.v1.0.tmap.gz'
@@ -83,17 +78,16 @@ gene_name_out = [i[1] for i in go_out]
 #combine go and spu
 go_spu_out = np.column_stack((spu_out,gene_name_out))
 
-
 # pull out snp ID
 i=0
-snp_out = np.empty(shape=(75368,14), dtype = object)
+snp_out = np.empty(shape=(75368,21), dtype = object)
 
 with open('/users/r/b/rbrennan/urchin_af/analysis/cmh.master.sort.out') as master_file:
     head1 = next(master_file)
     for idx, line in enumerate(master_file):
         snp_out[idx] =  line.split("\t")
-        tmp_go = snp_out[idx,13].split("\n")[0]
-        snp_out[idx,13] = tmp_go
+        tmp_go = snp_out[idx,20].split("\n")[0]
+        snp_out[idx,20] = tmp_go
         i=i+1
         if i % 10000 == 0: print(i)
 

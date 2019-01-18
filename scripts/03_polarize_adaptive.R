@@ -121,47 +121,123 @@ af2_8 <- af.mean$D7_8_DP2 - af.mean$D1_8_DP2
 af1_both <- rowMeans(cbind(af1_7, af1_8))
 
 af_out <- as.data.frame(matrix(nrow=nrow(af.mean), ncol=3))
-colnames(af_out) <- c("D1_8_af", "D7_7_af", "D7_8_af") # this is changed from original. want allele freq of all. 
+colnames(af_out) <- c("D1_8_af", "D7_7_af", "D7_8_af") 
 # mydata is in same order as af.mean. so can check sig cols. 
+# let's also calculate the change in allele freq based on each rep, rather than mean.
+
+
+af_out_in <- as.data.frame(matrix(nrow=nrow(af.mean), ncol=16))
+colnames(af_out_in) <- colnames(af.1[9:ncol(af.1)])
+
+af_out_reps <- as.data.frame(matrix(nrow=nrow(af.mean), ncol=8))
+colnames(af_out_reps) <- unique(substr(colnames(af_out_in), 1,7))
+
+af_out_in$D7_7_19_DP1 <- af.1$D7_7_19_DP1 - af.1$D1_8_01_DP1 
+af_out_in$D7_7_19_DP2 <- af.1$D7_7_19_DP2 - af.1$D1_8_01_DP2 
+af_out_in$D7_7_21_DP1 <- af.1$D7_7_21_DP1 - af.1$D1_8_02_DP1 
+af_out_in$D7_7_21_DP2 <- af.1$D7_7_21_DP2 - af.1$D1_8_02_DP2 
+af_out_in$D7_7_22_DP1 <- af.1$D7_7_22_DP1 - af.1$D1_8_04_DP1 
+af_out_in$D7_7_22_DP2 <- af.1$D7_7_22_DP2 - af.1$D1_8_04_DP2 
+af_out_in$D7_7_23_DP1 <- af.1$D7_7_23_DP1 - af.1$D1_8_07_DP1 
+af_out_in$D7_7_23_DP2 <- af.1$D7_7_23_DP2 - af.1$D1_8_07_DP2
+
+af_out_in$D7_8_14_DP1 <- af.1$D7_8_14_DP1 - af.1$D1_8_01_DP1 
+af_out_in$D7_8_14_DP2 <- af.1$D7_8_14_DP2 - af.1$D1_8_01_DP2 
+af_out_in$D7_8_15_DP1 <- af.1$D7_8_15_DP1 - af.1$D1_8_02_DP1 
+af_out_in$D7_8_15_DP2 <- af.1$D7_8_15_DP2 - af.1$D1_8_02_DP2 
+af_out_in$D7_8_16_DP1 <- af.1$D7_8_16_DP1 - af.1$D1_8_04_DP1 
+af_out_in$D7_8_16_DP2 <- af.1$D7_8_16_DP2 - af.1$D1_8_04_DP2 
+af_out_in$D7_8_17_DP1 <- af.1$D7_8_17_DP1 - af.1$D1_8_07_DP1 
+af_out_in$D7_8_17_DP2 <- af.1$D7_8_17_DP2 - af.1$D1_8_07_DP2
+
+
 
 for (i in 1:nrow(af_out)) {
     if(mydata$pH7_sig[i] == TRUE & mydata$pH8_sig[i] == FALSE){
         if(af1_7[i] > 0){
             af_out[i,] <- af.mean[i, grep("DP1", colnames(af.mean))]
+            af_out_reps[i,] <- af_out_in[i, grep("DP1", colnames(af_out_in))]
         }
         else{
             af_out[i,] <- af.mean[i, grep("DP2", colnames(af.mean))]
+            af_out_reps[i,] <- af_out_in[i, grep("DP2", colnames(af_out_in))]
+
         }
 
     }
     if(mydata$pH8_sig[i] == TRUE & mydata$pH7_sig[i] == FALSE){
         if(af1_8[i] > 0){
             af_out[i,] <- af.mean[i, grep("DP1", colnames(af.mean))]
+            af_out_reps[i,] <- af_out_in[i, grep("DP1", colnames(af_out_in))]
+
         }
         else{
             af_out[i,] <- af.mean[i, grep("DP2", colnames(af.mean))]
+            af_out_reps[i,] <- af_out_in[i, grep("DP2", colnames(af_out_in))]
+
         }
     }
     if(mydata$pH8_sig[i] == FALSE & mydata$pH7_sig[i] == FALSE){
         if(af1_both[i] > 0){
             af_out[i,] <- af.mean[i, grep("DP1", colnames(af.mean))]
+            af_out_reps[i,] <- af_out_in[i, grep("DP1", colnames(af_out_in))]
+
         }
         else{
             af_out[i,] <- af.mean[i, grep("DP2", colnames(af.mean))]
+            af_out_reps[i,] <- af_out_in[i, grep("DP2", colnames(af_out_in))]
+
         }
     }
     if(mydata$pH8_sig[i] == TRUE & mydata$pH7_sig[i] == TRUE){
         if(af1_both[i] > 0){
             af_out[i,] <- af.mean[i, grep("DP1", colnames(af.mean))]
+            af_out_reps[i,] <- af_out_in[i, grep("DP1", colnames(af_out_in))]
+
         }
         else{
             af_out[i,] <- af.mean[i, grep("DP2", colnames(af.mean))]
+            af_out_reps[i,] <- af_out_in[i, grep("DP2", colnames(af_out_in))]
+
         }
     }
 }
 
+colnames(af_out_reps) <- paste("delta",colnames(af_out_reps), sep="_")
+
+delta_75 <- apply(af_out_reps[,1:4],1,mean)
+delta_80 <- apply(af_out_reps[,5:8],1,mean)
+
+sd_75 <- apply(af_out_reps[,1:4],1,sd)
+sd_80 <- apply(af_out_reps[,5:8],1,sd)
+
+# combine all:
+
+out1 <- cbind(mydata, af_out)
+out2 <- cbind(out1, af_out_reps)
+
+out3 <- out2[ , !(names(out2) %in% c("D1_8_mean", "D7_7_mean", "D7_8_mean"))]
+
+out3$mean_delta_75 <- delta_75
+out3$mean_delta_80 <- delta_80
+out3$sd_delta_75 <- sd_75
+out3$sd_delta_80 <- sd_80
+
+mean(out3$mean_delta_75[which(out3$pH7_sig == TRUE)])
+mean(out3$sd_delta_75[which(out3$pH7_sig == TRUE)])
+mean(out3$mean_delta_80[which(out3$pH8_sig == TRUE)])
+mean(out3$sd_delta_80[which(out3$pH8_sig == TRUE)])
+mean(out3$mean_delta_75[which(out3$pH7_sig == TRUE & out3$pH8_sig == TRUE)])
+mean(out3$sd_delta_75[which(out3$pH7_sig == TRUE & out3$pH8_sig == TRUE)])
+
+mean(out3$mean_delta_75)
+mean(out3$sd_delta_75)
+
+mean(out3$mean_delta_80)
+mean(out3$sd_delta_75)
+
 
 # save adaptive allele table
 
-write.table(file="~/urchin_af/analysis/adaptive_allelefreq.txt", cbind(mydata, af_out),
+write.table(file="~/urchin_af/analysis/adaptive_allelefreq.txt",out3,
     col.name=TRUE, quote=FALSE, row.name=FALSE, sep= "\t" )
