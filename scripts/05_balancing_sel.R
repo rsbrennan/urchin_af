@@ -93,7 +93,8 @@ new$class[which(new$Annotation == "intron_variant" |
     new$Annotation == "splice_region_variant&synonymous_variant"|
     new$Annotation == "splice_region_variant&non_coding_transcript_exon_variant"|
     new$Annotation == "non_coding_transcript_exon_variant"|
-    new$Annotation == "splice_donor_variant&intron_variant")] <- c("intron")
+    new$Annotation == "splice_donor_variant&intron_variant"|
+    new$Annotation == "3_prime_UTR_variant")] <- c("intron")
 new$class[which(new$Annotation == "synonymous_variant" |
     new$Annotation == "stop_retained_variant"|
     new$Annotation == "splice_region_variant&stop_retained_variant")] <- c("synonymous")
@@ -104,8 +105,7 @@ new$class[which(new$Annotation == "missense_variant" |
     new$Annotation == "start_lost"|
     new$Annotation == "stop_gained&splice_region_variant"|
     new$Annotation == "stop_lost&splice_region_variant"|
-    new$Annotation == "initiator_codon_variant"|
-    new$Annotation == "3_prime_UTR_variant")] <- c("non-synonymous")
+    new$Annotation == "initiator_codon_variant")] <- c("non-synonymous")
 
 
 # make data frame for plotting
