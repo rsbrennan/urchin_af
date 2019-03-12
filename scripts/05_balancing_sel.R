@@ -94,7 +94,9 @@ new$class[which(new$Annotation == "intron_variant" |
     new$Annotation == "splice_region_variant&non_coding_transcript_exon_variant"|
     new$Annotation == "non_coding_transcript_exon_variant"|
     new$Annotation == "splice_donor_variant&intron_variant"|
-    new$Annotation == "3_prime_UTR_variant")] <- c("intron")
+    new$Annotation == "3_prime_UTR_variant"|
+    new$Annotation == "splice_acceptor_variant&splice_donor_variant&intron_variant"|
+    new$Annotation == "splice_acceptor_variant&splice_region_variant&intron_variant")] <- c("intron")
 new$class[which(new$Annotation == "synonymous_variant" |
     new$Annotation == "stop_retained_variant"|
     new$Annotation == "splice_region_variant&stop_retained_variant")] <- c("synonymous")
@@ -176,9 +178,10 @@ ens_all <- rbind(ens.neut, ens.sel_8, ens.sel_7)
 
 ## chi sq for props
 
+# genic vs intergenic
 gen_7 <- c(537, 250)
 gen_8 <- c(401, 171)
-gen_all <- c(50686, 24677)
+gen_all <- c(50691, 24677)
 
 Mat_7 <- matrix(c(gen_all, gen_7),
                 nrow=2,
@@ -233,9 +236,9 @@ new.neut <- new[which(new$sig_pH8 ==FALSE & new$sig_pH7 ==FALSE),]
 
 
 # fold af
-mydata$folded_af = unlist(lapply(mydata$D1_8_mean,function(x)
+mydata$folded_af = unlist(lapply(mydata$D1_8_af,function(x)
           ifelse(x > 0.5, (1-x), x)), use.names=FALSE)
-
+mydata$D1_8_af <- mydata$folded_af
 
 # ns variants
 ns.sel_7 <- new.sel_7[which(new.sel_7$class == "non-synonymous"),]
@@ -258,7 +261,6 @@ intergen.sel_8 <- new.sel_8[which(new.sel_8$class == "intergenic"),]
 intergen.neut <- new.neut[which(new.neut$class == "intergenic"),]
 
 
-# unfolded allele freqs are col: af_out
 # merge datasets:
 ns.sel_7.merge <- merge(mydata,ns.sel_7, by="SNP" )
 ns.sel_8.merge <- merge(mydata,ns.sel_8, by="SNP" )
@@ -281,7 +283,7 @@ intergen.neut.merge <- merge(mydata,intergen.neut, by="SNP" )
 intergen.all <- rbind(intergen.neut.merge, intergen.sel_7.merge,intergen.sel_8.merge)
 
 
-# unfolded
+# folded
 ns.neut.merge$unfold_bin <- cut(ns.neut.merge$D1_8_af, breaks=seq(0,1, 0.05))
 ns.sel_7.merge$unfold_bin <- cut(ns.sel_7.merge$D1_8_af, breaks=seq(0,1, 0.05))
 ns.sel_8.merge$unfold_bin <- cut(ns.sel_8.merge$D1_8_af, breaks=seq(0,1, 0.05))
@@ -305,9 +307,7 @@ intergen.all$unfold_bin <- cut(intergen.all$D1_8_af, breaks=seq(0,1, 0.05))
 ####### Unfolded #########
 
 bin <- c("0-0.05", "0.05-0.1", "0.1-0.15", "0.15-0.2", "0.2-0.25",
-    "0.25-0.3", "0.3-0.35", "0.35-0.4", "0.4-0.45", "0.45-0.5",
-    "0.5-0.55", "0.55-0.6", "0.6-0.65", "0.65-0.7", "0.7-0.75",
-    "0.75-0.8", "0.8-0.85", "0.85-0.9", "0.9-0.95", "0.95-1")
+    "0.25-0.3", "0.3-0.35", "0.35-0.4", "0.4-0.45", "0.45-0.5")
 
 # make barplot of neutral vs selected
 ns_neut_unfoldfreq <- table(ns.neut.merge$unfold_bin)/sum(table(ns.neut.merge$unfold_bin))
@@ -375,7 +375,7 @@ intergen.fq.dat <- rbind(intergen.sel_7.dat,intergen.sel_8.dat, intergen.neut.da
 
 a <- ggplot(data=ns.fq.dat, aes(x=bin, y=allele_frequency, fill=class, group=class)) +
 geom_bar(stat="identity", color="black", position=position_dodge())+
-  theme_bw() + scale_fill_manual(values=c('royalblue4','tomato3', 'darkolivegreen3', 'grey38'))+
+  theme_bw() + scale_fill_manual(values=c('tomato3','royalblue4', 'darkolivegreen3', 'grey38'))+
   theme(axis.text.x = element_text(angle = 45, hjust = 1))+
   ylim(0, 0.45) +
   guides(size = FALSE) +
@@ -385,7 +385,7 @@ geom_bar(stat="identity", color="black", position=position_dodge())+
 
 b <- ggplot(data=syn.fq.dat, aes(x=bin, y=allele_frequency, fill=class, group=class)) +
 geom_bar(stat="identity", color="black", position=position_dodge())+
-  theme_bw() + scale_fill_manual(values=c('royalblue4','tomato3', 'darkolivegreen3', 'grey38'))+
+  theme_bw() + scale_fill_manual(values=c('tomato3','royalblue4', 'darkolivegreen3', 'grey38'))+
   theme(axis.text.x = element_text(angle = 45, hjust = 1))+
   ylim(0, 0.45) +
   guides(size = FALSE) +
@@ -395,7 +395,7 @@ geom_bar(stat="identity", color="black", position=position_dodge())+
 
 c <- ggplot(data=intron.fq.dat, aes(x=bin, y=allele_frequency, fill=class, group=class)) +
 geom_bar(stat="identity", color="black", position=position_dodge())+
-  theme_bw() + scale_fill_manual(values=c('royalblue4','tomato3', 'darkolivegreen3', 'grey38'))+
+  theme_bw() + scale_fill_manual(values=c('tomato3','royalblue4', 'darkolivegreen3', 'grey38'))+
   theme(axis.text.x = element_text(angle = 45, hjust = 1))+
   ylim(0, 0.45) +
   guides(size = FALSE) +
@@ -405,9 +405,9 @@ geom_bar(stat="identity", color="black", position=position_dodge())+
 
 d <- ggplot(data=intergen.fq.dat, aes(x=bin, y=allele_frequency, fill=class, group=class)) +
 geom_bar(stat="identity", color="black", position=position_dodge())+
-  theme_bw() + scale_fill_manual(values=c('royalblue4','tomato3', 'darkolivegreen3', 'grey38'))+
+  theme_bw() + scale_fill_manual(values=c('tomato3','royalblue4', 'darkolivegreen3', 'grey38'))+
   theme(axis.text.x = element_text(angle = 45, hjust = 1))+
-  ggtitle("intergenic")+
+  ggtitle("regulatory")+
   ylim(0, 0.45) +
   guides(size = FALSE) +
   ylab("relative frequency") +
@@ -423,7 +423,7 @@ library(ggpubr)
 ################
 
 
-png("~/urchin_af/figures/AF_categories_unfolded_bin.png", height=7, res=300, units="in", width=10)
+png("~/urchin_af/figures/AF_categories_folded_bin.png", height=7, res=300, units="in", width=10)
 ggarrange(a, b, c, d, ncol=2, nrow=2, common.legend = TRUE, legend="bottom")
 dev.off()
 
