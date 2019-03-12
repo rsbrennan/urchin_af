@@ -181,9 +181,6 @@ list(ks.test(snp.sel_80, snp.sel, alternative="greater")$p.value,
     ks.test(snp.sel_75,snp.sel, alternative="greater")$p.value,
     ks.test(snp.sel_both,snp.sel, alternative="greater")$p.value,
     snp.sel,
-    wilcox.test(snp.sel_80, snp.sel, alternative="l", correct=TRUE)$p.value,
-    wilcox.test(snp.sel_75, snp.sel, alternative="l", correct=TRUE)$p.value,
-    wilcox.test(snp.sel_both,snp.sel, alternative="l", correct=TRUE)$p.value
 )
 
 }
@@ -193,9 +190,6 @@ write.table(my_results_par[[1]], file="~/urchin_af/analysis/permutation_8_pval.t
 write.table(my_results_par[[3]], file="~/urchin_af/analysis/permutation_both_pval.txt",  col.names=TRUE, quote=FALSE, sep="\t")
 write.table(my_results_par[[4]], file="~/urchin_af/analysis/permutation_af.txt",  col.names=TRUE, quote=FALSE, sep="\t")
 
-write.table(my_results_par[[6]], file="~/urchin_af/analysis/permutation_wilcox_75_pval.txt",  col.names=TRUE, quote=FALSE, sep="\t")
-write.table(my_results_par[[5]], file="~/urchin_af/analysis/permutation_wilcox_8_pval.txt",  col.names=TRUE, quote=FALSE, sep="\t")
-write.table(my_results_par[[7]], file="~/urchin_af/analysis/permutation_wilcox_both_pval.txt",  col.names=TRUE, quote=FALSE, sep="\t")
 
 
 #stop cluster
@@ -208,12 +202,6 @@ length(which(my_results_par[[2]] < 0.05)) # ks, 7.5 vs perm
 #493
 length(which(my_results_par[[3]] < 0.05)) # ks, both vs perm
 # 412
-length(which(my_results_par[[5]] < 0.05)) # wilcox, 8.0 vs perm
-# 482
-length(which(my_results_par[[6]] < 0.05)) # wilcox, 7.5 vs perm
-# 494
-length(which(my_results_par[[7]] < 0.05)) # wilcox, both vs perm
-# 409
 
 png("~/urchin_af/figures/maf_unfolded_permute.png", res=300, height=7, width=7, units="in")
 

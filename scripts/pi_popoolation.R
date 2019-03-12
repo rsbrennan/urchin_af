@@ -35,6 +35,6 @@ mean(as.numeric(d2$pi.x)) # D1_8
 mean(as.numeric(d2$pi.y)) # D7_7
 mean(as.numeric(d2$pi)) # D7_8
 
-ks.test(as.numeric(d2$pi.x), as.numeric(d2$pi.y))
-ks.test(as.numeric(d2$pi.x), as.numeric(d2$pi))
-ks.test(as.numeric(d2$pi.y), as.numeric(d2$pi))
+wilcox.test(as.numeric(d2$pi.x), as.numeric(d2$pi.y), correct=TRUE)
+wilcox.test(as.numeric(d2$pi.x), as.numeric(d2$pi), correct=TRUE)
+wilcox.test(as.numeric(d2$pi.y), as.numeric(d2$pi), correct=TRUE)
