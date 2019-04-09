@@ -101,7 +101,7 @@ Supplemental Figures:
 - Figure S3: violin plot
 - Figure S4: `05_balancing_sel.R` 
 - Figure S5: `Fig_S4_S5.R`
-- Figure S6: `Fig_S4_S5.R`
+- Figure S6: `05_balancing_sel.R`
 
 
 
