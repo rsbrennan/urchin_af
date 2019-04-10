@@ -89,18 +89,17 @@ Call variants: `01.1_variant_call.sh`
 
 ### Figures
 
-- Figure 1:
-- Figure 2: `Fig_02_pca.R`
-- Figure 3: `Fig_03_LD.R`
-- Figure 4: `Fig_04_afchangecomp.R`
-- Figure 5: `Fig_05.R`
+- Figure 1: 
+- Figure 2: `Fig_02.R`
+- Figure 3: `Fig_03.R`
+- Figure 4: `Fig_04.R`
 
 Supplemental Figures:
-- Figure S1: in `Fig_03_LD.R`
-- Figure S2: `Fig_S2_manhattan.R`
-- Figure S3: violin plot
-- Figure S4: `05_balancing_sel.R` 
-- Figure S5: `Fig_S4_S5.R`
+- Figure S1: `Fig_S1.R`
+- Figure S2: `Fig_S02_03_05.R`
+- Figure S3: `Fig_S02_03_05.R`
+- Figure S4: `Fig_S04.R` 
+- Figure S5: `Fig_S02_03_05.R`
 - Figure S6: `05_balancing_sel.R`
 
 
