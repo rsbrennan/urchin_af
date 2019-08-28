@@ -1,8 +1,13 @@
 # Purple Sea Urchin Sequence Pool-seq Capture Selection Experiment
 
-This repository holds scripts for the analysis of a purple sea urchin, Strongylocentrotus purpuratus, selection experiment.
+This repository holds scripts for the analysis of a purple sea urchin, *Strongylocentrotus purpuratus*, selection experiment. Now published in Proceedings of the Royal Society B. [Link to paper here](https://doi.org/10.1098/rspb.2019.0943). 
 
-Original experiment was completed on ?? where 25 adult urchins were spawned and resulting embryos were exposed to moderately low (pH 8.0) or extremely low (pH 7.5) pH conditions. Pools of larvae sequenced to > 50x coverage to identify adaptive changes in allele frequency in response to different degrees of low pH selection.
+
+If you use these resources, please cite the following publication:
+
+Brennan, R.S., Garrett, A.D., Huber, K.E., Hargarten, H. and Pespeni, M.H., 2019. Rare genetic variation and balanced polymorphisms are important for survival in global change conditions. Proceedings of the Royal Society B, 286(1904), p.20190943.
+
+Original experiment was run where 25 adult urchins were spawned and resulting embryos were exposed to moderately low (pH 8.0) or extremely low (pH 7.5) pH conditions. Pools of larvae sequenced to > 50x coverage to identify adaptive changes in allele frequency in response to different degrees of low pH selection.
 
 ## data availability
 
